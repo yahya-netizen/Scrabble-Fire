@@ -1,0 +1,29 @@
+[
+    {
+        "id": "1",
+        "number": 1,
+        "clue": "Protokol untuk komunikasi dua arah real-time",
+        "answer": "WEBSOCKET",
+        "row": 5,
+        "col": 2,
+        "direction": "across"
+    },
+    {
+        "id": "2",
+        "number": 2,
+        "clue": "Bahasa pemrograman yang sering digunakan dengan Node.js",
+        "answer": "JAVASCRIPT",
+        "row": 1,
+        "col": 5,
+        "direction": "down"
+    },
+    {
+        "id": "3",
+        "number": 3,
+        "clue": "Format pertukaran data yang ringan dan mudah dibaca",
+        "answer": "JSON",
+        "row": 1,
+        "col": 5,
+        "direction": "across"
+    }
+]
