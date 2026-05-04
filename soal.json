@@ -2,28 +2,91 @@
     {
         "id": "1",
         "number": 1,
-        "clue": "Protokol untuk komunikasi dua arah real-time",
+        "clue": "Protokol komunikasi dua arah real-time antara klien dan server",
         "answer": "WEBSOCKET",
-        "row": 5,
-        "col": 2,
+        "row": 3,
+        "col": 1,
         "direction": "across"
     },
     {
         "id": "2",
         "number": 2,
-        "clue": "Bahasa pemrograman yang sering digunakan dengan Node.js",
-        "answer": "JAVASCRIPT",
+        "clue": "Framework Node.js untuk membuat web server dengan cepat",
+        "answer": "EXPRESS",
         "row": 1,
-        "col": 5,
+        "col": 7,
         "direction": "down"
     },
     {
         "id": "3",
         "number": 3,
-        "clue": "Format pertukaran data yang ringan dan mudah dibaca",
+        "clue": "Format pertukaran data ringan berbasis teks yang mudah dibaca manusia",
         "answer": "JSON",
         "row": 1,
-        "col": 5,
+        "col": 1,
+        "direction": "across"
+    },
+    {
+        "id": "4",
+        "number": 4,
+        "clue": "Lingkungan runtime JavaScript di sisi server",
+        "answer": "NODEJS",
+        "row": 1,
+        "col": 1,
+        "direction": "down"
+    },
+    {
+        "id": "5",
+        "number": 5,
+        "clue": "Penyiaran pesan ke semua klien yang terhubung di Socket.io",
+        "answer": "BROADCAST",
+        "row": 7,
+        "col": 1,
+        "direction": "across"
+    },
+    {
+        "id": "6",
+        "number": 6,
+        "clue": "Kondisi balapan antar proses yang mengakses data bersamaan",
+        "answer": "RACE",
+        "row": 5,
+        "col": 9,
+        "direction": "down"
+    },
+    {
+        "id": "7",
+        "number": 7,
+        "clue": "Ruang virtual tempat pemain berkumpul dalam permainan online",
+        "answer": "ROOM",
+        "row": 9,
+        "col": 6,
+        "direction": "across"
+    },
+    {
+        "id": "8",
+        "number": 8,
+        "clue": "Peristiwa atau sinyal yang dikirim antar komponen dalam Socket.io",
+        "answer": "EVENT",
+        "row": 11,
+        "col": 3,
+        "direction": "across"
+    },
+    {
+        "id": "9",
+        "number": 9,
+        "clue": "Fungsi yang dipanggil setelah operasi async selesai (Node.js lama)",
+        "answer": "CALLBACK",
+        "row": 3,
+        "col": 12,
+        "direction": "down"
+    },
+    {
+        "id": "10",
+        "number": 10,
+        "clue": "Manajer paket bawaan Node.js untuk menginstal dependensi",
+        "answer": "NPM",
+        "row": 13,
+        "col": 1,
         "direction": "across"
     }
 ]
