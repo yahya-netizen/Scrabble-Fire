@@ -2,91 +2,73 @@
     {
         "id": "1",
         "number": 1,
-        "clue": "Protokol komunikasi dua arah real-time antara klien dan server",
         "answer": "WEBSOCKET",
-        "row": 3,
-        "col": 1,
-        "direction": "across"
+        "row": 5,
+        "col": 2,
+        "direction": "across",
+        "clue": "Protokol komunikasi dua arah real-time antara klien dan server"
     },
     {
         "id": "2",
         "number": 2,
-        "clue": "Framework Node.js untuk membuat web server dengan cepat",
         "answer": "EXPRESS",
-        "row": 1,
-        "col": 7,
-        "direction": "down"
+        "row": 5,
+        "col": 3,
+        "direction": "down",
+        "clue": "Framework Node.js minimal untuk membuat REST API dengan cepat"
     },
     {
         "id": "3",
         "number": 3,
-        "clue": "Format pertukaran data ringan berbasis teks yang mudah dibaca manusia",
-        "answer": "JSON",
-        "row": 1,
-        "col": 1,
-        "direction": "across"
+        "answer": "SERVER",
+        "row": 5,
+        "col": 5,
+        "direction": "down",
+        "clue": "Komputer yang melayani permintaan data dari klien"
     },
     {
         "id": "4",
         "number": 4,
-        "clue": "Lingkungan runtime JavaScript di sisi server",
-        "answer": "NODEJS",
-        "row": 1,
-        "col": 1,
-        "direction": "down"
+        "answer": "NODE",
+        "row": 12,
+        "col": 6,
+        "direction": "down",
+        "clue": "Runtime JavaScript di luar browser, berbasis V8 engine"
     },
     {
         "id": "5",
         "number": 5,
-        "clue": "Penyiaran pesan ke semua klien yang terhubung di Socket.io",
-        "answer": "BROADCAST",
-        "row": 7,
-        "col": 1,
-        "direction": "across"
+        "answer": "EVENT",
+        "row": 9,
+        "col": 3,
+        "direction": "across",
+        "clue": "Sinyal atau peristiwa yang dikirim dan ditangkap di Socket.io"
     },
     {
         "id": "6",
         "number": 6,
-        "clue": "Kondisi balapan antar proses yang mengakses data bersamaan",
-        "answer": "RACE",
+        "answer": "TOKEN",
         "row": 5,
-        "col": 9,
-        "direction": "down"
+        "col": 10,
+        "direction": "down",
+        "clue": "String unik sebagai bukti autentikasi pengguna"
     },
     {
         "id": "7",
         "number": 7,
-        "clue": "Ruang virtual tempat pemain berkumpul dalam permainan online",
-        "answer": "ROOM",
-        "row": 9,
-        "col": 6,
-        "direction": "across"
+        "answer": "EDGE",
+        "row": 8,
+        "col": 10,
+        "direction": "across",
+        "clue": "Komponen jaringan di antara klien dan server untuk memproses data lebih dekat ke sumber"
     },
     {
         "id": "8",
         "number": 8,
-        "clue": "Peristiwa atau sinyal yang dikirim antar komponen dalam Socket.io",
-        "answer": "EVENT",
-        "row": 11,
-        "col": 3,
-        "direction": "across"
-    },
-    {
-        "id": "9",
-        "number": 9,
-        "clue": "Fungsi yang dipanggil setelah operasi async selesai (Node.js lama)",
-        "answer": "CALLBACK",
-        "row": 3,
-        "col": 12,
-        "direction": "down"
-    },
-    {
-        "id": "10",
-        "number": 10,
-        "clue": "Manajer paket bawaan Node.js untuk menginstal dependensi",
-        "answer": "NPM",
+        "answer": "BROADCAST",
         "row": 13,
-        "col": 1,
-        "direction": "across"
+        "col": 4,
+        "direction": "across",
+        "clue": "Pengiriman pesan ke semua klien yang terhubung di satu room Socket.io"
     }
 ]
