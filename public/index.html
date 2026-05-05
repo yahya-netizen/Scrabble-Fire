@@ -3,73 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrable Fire - Real-time Crossword</title>
+    <title>🔥 Scrabble Fire</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Extra styles for Auth Overlay from previous version */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        .auth-card {
+            background: #1a0d0d;
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid #8b0000;
+            box-shadow: 0 0 40px rgba(255,69,0,0.4);
+            text-align: center;
+            width: 380px;
+        }
+        .auth-card h2 { color: #ffcc00; margin-bottom: 20px; }
+        .auth-card input {
+            width: 100%;
+            background: #0f0808;
+            border: 1px solid #8b0000;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+        .auth-card input:focus { border-color: #ff4500; }
+        .auth-card button {
+            width: 100%;
+            background: #ff4500;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .auth-card button:hover { background: #e03d00; }
+        .auth-card p { font-size: 0.85rem; margin-top: 20px; color: #555; }
+        .auth-card a { color: #ffcc00; text-decoration: none; font-weight: 700; }
+    </style>
 </head>
 <body>
 
-    <!-- Auth Overlay -->
-    <div id="auth-overlay" class="overlay">
-        <div class="auth-card">
-            <h1>🔥 SCRABLE FIRE 🔥</h1>
-            <div id="auth-forms">
-                <div id="login-form">
-                    <h2>Login</h2>
-                    <input type="text" id="login-username" placeholder="Username">
-                    <input type="password" id="login-password" placeholder="Password">
-                    <button id="btn-login">Login</button>
-                    <p>Belum punya akun? <a href="#" id="show-register">Daftar di sini</a></p>
-                </div>
-                <div id="register-form" style="display: none;">
-                    <h2>Daftar Akun</h2>
-                    <input type="text" id="reg-username" placeholder="Username">
-                    <input type="password" id="reg-password" placeholder="Password">
-                    <button id="btn-register">Daftar</button>
-                    <p>Sudah punya akun? <a href="#" id="show-login">Login di sini</a></p>
-                </div>
-            </div>
-            <p id="auth-message" style="color: #ffcc00; margin-top: 10px;"></p>
+<!-- ═══════════ AUTH ═══════════ -->
+<div id="auth-overlay" class="overlay">
+    <div class="auth-card">
+        <div class="logo" style="font-size: 2.2rem; font-weight: 900; color: #ff4500; text-shadow: 0 0 20px #8b0000; margin-bottom: 10px;">🔥 SCRABBLE FIRE</div>
+        
+        <div id="login-form">
+            <h2>Masuk</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <button id="btn-login">Login</button>
+            <p>Belum punya akun? <a href="#" id="show-register">Daftar sekarang</a></p>
+        </div>
+
+        <div id="register-form" style="display: none;">
+            <h2>Daftar Akun</h2>
+            <input type="text" id="reg-username" placeholder="Username">
+            <input type="password" id="reg-password" placeholder="Password">
+            <button id="btn-register">Daftar</button>
+            <p>Sudah punya akun? <a href="#" id="show-login">Login di sini</a></p>
+        </div>
+        
+        <p id="auth-message" style="color: #ffcc00; margin-top: 15px; min-height: 20px;"></p>
+    </div>
+</div>
+
+<!-- ═══════════ LOBBY ═══════════ -->
+<div id="lobby-screen" class="screen" style="display: none;">
+    <div class="lobby-card">
+        <div class="logo">🔥 SCRABBLE FIRE</div>
+        <div class="tagline">Teka-teki silang multiplayer real-time</div>
+        
+        <div style="text-align: right; margin-bottom: 20px;">
+            <span id="lobby-user-display" style="color: #ffcc00; font-weight: 700; margin-right: 10px;"></span>
+            <button onclick="logout()" style="background: transparent; border: 1px solid #333; color: #555; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.75rem;">Logout</button>
+        </div>
+
+        <label class="field-label">ID Room</label>
+        <input id="inp-room" class="field-input" placeholder="Ketik ID room baru atau pilih di bawah..." maxlength="20" autocomplete="off">
+
+        <button class="btn" onclick="joinRoom()">🚀 Masuk / Buat Room</button>
+        <div id="lobby-error" class="error-msg"></div>
+
+        <div class="divider">atau pilih room aktif</div>
+
+        <div id="room-list-container">
+            <h3>Room Tersedia</h3>
+            <div id="room-list"><div id="no-rooms">Memuat daftar room...</div></div>
         </div>
     </div>
+</div>
 
-    <!-- Main Game UI -->
-    <div id="game-ui" style="display: none;">
-        <header>
-            <h1>🔥 SCRABLE FIRE 🔥</h1>
-            <div class="user-bar">
-                <span id="user-info">Pemain: -</span>
-                <button id="btn-logout">Logout</button>
+<!-- ═══════════ GAME ═══════════ -->
+<div id="game-screen" class="screen">
+    <div class="topbar">
+        <div class="topbar-logo">🔥 SCRABBLE FIRE</div>
+        <div class="topbar-info">
+            <span id="topbar-player" class="player-badge"></span>
+            <span id="topbar-room" class="room-tag"></span>
+        </div>
+        <div id="timer-display">3:00</div>
+    </div>
+
+    <div class="game-layout">
+        <div id="grid-wrapper">
+            <div id="grid"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <h2>Pemain Online</h2>
+                <ul id="players-list"></ul>
             </div>
-        </header>
 
-        <div class="game-container">
-            <div id="grid-wrapper">
-                <div id="grid"></div>
-            </div>
-
-            <div class="sidebar">
-                <div class="panel">
-                    <h2>Leaderboard</h2>
-                    <ul id="scores"></ul>
-                </div>
-                <div class="panel">
-                    <h2>Pertanyaan</h2>
-                    <div class="clue-list">
-                        <div id="clues-across">
-                            <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Mendatar</h3>
-                            <ul id="list-across"></ul>
-                        </div>
-                        <div id="clues-down" style="margin-top: 15px;">
-                            <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Menurun</h3>
-                            <ul id="list-down"></ul>
-                        </div>
-                    </div>
+            <div class="panel">
+                <h2>Pertanyaan</h2>
+                <div class="clue-list">
+                    <div class="clue-section-title">Mendatar</div>
+                    <ul id="list-across"></ul>
+                    <div class="clue-section-title" style="margin-top:14px">Menurun</div>
+                    <ul id="list-down"></ul>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="js/client.js"></script>
+<!-- ═══════════ GAME OVER ═══════════ -->
+<div id="gameover-screen" class="screen">
+    <div class="gameover-card">
+        <div class="gameover-title">🏁 Permainan Selesai</div>
+        <div id="gameover-reason" class="gameover-reason"></div>
+        <div class="winner-banner">
+            <div class="trophy">🏆</div>
+            <div style="font-size:0.8rem;color:var(--dim);margin-bottom:4px">PEMENANG</div>
+            <div id="winner-name" class="winner-name"></div>
+        </div>
+        <ul id="final-rankings" class="rankings"></ul>
+        <button class="btn" onclick="backToLobby()">🔁 Kembali ke Lobby</button>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/client.js"></script>
 </body>
 </html>

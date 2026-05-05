@@ -2,28 +2,73 @@
     {
         "id": "1",
         "number": 1,
-        "clue": "Protokol untuk komunikasi dua arah real-time",
         "answer": "WEBSOCKET",
         "row": 5,
         "col": 2,
-        "direction": "across"
+        "direction": "across",
+        "clue": "Protokol komunikasi dua arah real-time antara klien dan server"
     },
     {
         "id": "2",
         "number": 2,
-        "clue": "Bahasa pemrograman yang sering digunakan dengan Node.js",
-        "answer": "JAVASCRIPT",
-        "row": 1,
-        "col": 5,
-        "direction": "down"
+        "answer": "EXPRESS",
+        "row": 5,
+        "col": 3,
+        "direction": "down",
+        "clue": "Framework Node.js minimal untuk membuat REST API dengan cepat"
     },
     {
         "id": "3",
         "number": 3,
-        "clue": "Format pertukaran data yang ringan dan mudah dibaca",
-        "answer": "JSON",
-        "row": 1,
+        "answer": "SERVER",
+        "row": 5,
         "col": 5,
-        "direction": "across"
+        "direction": "down",
+        "clue": "Komputer yang melayani permintaan data dari klien"
+    },
+    {
+        "id": "4",
+        "number": 4,
+        "answer": "NODE",
+        "row": 12,
+        "col": 6,
+        "direction": "down",
+        "clue": "Runtime JavaScript di luar browser, berbasis V8 engine"
+    },
+    {
+        "id": "5",
+        "number": 5,
+        "answer": "EVENT",
+        "row": 9,
+        "col": 3,
+        "direction": "across",
+        "clue": "Sinyal atau peristiwa yang dikirim dan ditangkap di Socket.io"
+    },
+    {
+        "id": "6",
+        "number": 6,
+        "answer": "TOKEN",
+        "row": 5,
+        "col": 10,
+        "direction": "down",
+        "clue": "String unik sebagai bukti autentikasi pengguna"
+    },
+    {
+        "id": "7",
+        "number": 7,
+        "answer": "EDGE",
+        "row": 8,
+        "col": 10,
+        "direction": "across",
+        "clue": "Komponen jaringan di antara klien dan server untuk memproses data lebih dekat ke sumber"
+    },
+    {
+        "id": "8",
+        "number": 8,
+        "answer": "BROADCAST",
+        "row": 13,
+        "col": 4,
+        "direction": "across",
+        "clue": "Pengiriman pesan ke semua klien yang terhubung di satu room Socket.io"
     }
 ]

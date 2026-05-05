@@ -10,7 +10,9 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: { origin: '*' }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const USERS_FILE = 'users.json';
@@ -27,10 +29,154 @@ const readUsers = () => JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 const writeUsers = (users) => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 const readSoal = () => JSON.parse(fs.readFileSync(SOAL_FILE, 'utf8'));
 
-// Game State
-let gridState = {}; 
-let completedWords = {}; 
-let scores = {};
+// ─────────────────────────────────────────────
+//  ROOM MANAGEMENT
+// ─────────────────────────────────────────────
+const GAME_DURATION = 180; // seconds
+const MAX_PLAYERS_PER_ROOM = 4;
+const rooms = new Map();
+
+function createRoom(roomId) {
+    return {
+        id: roomId,
+        players: {},          // socketId → { username, score, color }
+        gridState: {},        // "r-c" → { char, locked, lockedBy }
+        completedWords: {},   // wordId → username
+        timer: null,
+        timeLeft: GAME_DURATION,
+        gameStarted: false,
+        gameOver: false,
+        validating: new Set()
+    };
+}
+
+function getRoomList() {
+    const list = [];
+    rooms.forEach((room, id) => {
+        const playerCount = Object.keys(room.players).length;
+        if (!room.gameOver && playerCount < MAX_PLAYERS_PER_ROOM) {
+            list.push({ id, playerCount, maxPlayers: MAX_PLAYERS_PER_ROOM, gameStarted: room.gameStarted });
+        }
+    });
+    return list;
+}
+
+const PLAYER_COLORS = ['#ff4500', '#00cfff', '#39ff14', '#ff00ff', '#ffd700'];
+function assignColor(room) {
+    const used = Object.values(room.players).map(p => p.color);
+    return PLAYER_COLORS.find(c => !used.includes(c)) || PLAYER_COLORS[0];
+}
+
+function startTimer(roomId) {
+    const room = rooms.get(roomId);
+    if (!room || room.timer) return;
+
+    room.gameStarted = true;
+    room.timer = setInterval(() => {
+        room.timeLeft--;
+        io.to(roomId).emit('timer_update', { timeLeft: room.timeLeft });
+
+        if (room.timeLeft <= 0) {
+            endGame(roomId, 'Waktu Habis!');
+        }
+    }, 1000);
+}
+
+function endGame(roomId, reason) {
+    const room = rooms.get(roomId);
+    if (!room || room.gameOver) return;
+
+    room.gameOver = true;
+    clearInterval(room.timer);
+    room.timer = null;
+
+    const rankings = Object.values(room.players)
+        .sort((a, b) => b.score - a.score)
+        .map((p, i) => ({ rank: i + 1, username: p.username, score: p.score, color: p.color }));
+
+    const winner = rankings[0] || null;
+
+    io.to(roomId).emit('game_over', {
+        reason,
+        rankings,
+        winner: winner ? winner.username : 'Tidak Ada',
+        completedWords: room.completedWords
+    });
+}
+
+function checkWordCompletion(room, roomId, username) {
+    const dataSoal = readSoal();
+    dataSoal.forEach(soal => {
+        if (room.completedWords[soal.id]) return;
+        if (room.validating.has(soal.id)) return;
+
+        let isCorrect = true;
+        for (let i = 0; i < soal.answer.length; i++) {
+            let r = soal.row;
+            let c = soal.col;
+            if (soal.direction === 'across') c += i;
+            else r += i;
+
+            const cell = room.gridState[`${r}-${c}`];
+            if (!cell || cell.char !== soal.answer[i].toUpperCase()) {
+                isCorrect = false;
+                break;
+            }
+        }
+
+        if (isCorrect) {
+            room.validating.add(soal.id);
+
+            if (room.completedWords[soal.id]) {
+                room.validating.delete(soal.id);
+                return;
+            }
+
+            room.completedWords[soal.id] = username;
+            const player = Object.values(room.players).find(p => p.username === username);
+            if (player) {
+                player.score += soal.answer.length * 2;
+            }
+
+            for (let i = 0; i < soal.answer.length; i++) {
+                let r = soal.row, c = soal.col;
+                if (soal.direction === 'across') c += i; else r += i;
+                const cellId = `${r}-${c}`;
+                if (!room.gridState[cellId]) room.gridState[cellId] = { char: soal.answer[i] };
+                room.gridState[cellId].locked = true;
+                room.gridState[cellId].lockedBy = username;
+                room.gridState[cellId].lockedColor = player ? player.color : '#ffffff';
+            }
+
+            const scores = buildScores(room);
+            io.to(roomId).emit('word_completed', {
+                wordId: soal.id,
+                username,
+                scores,
+                answer: soal.answer,
+                direction: soal.direction,
+                row: soal.row,
+                col: soal.col,
+                color: player ? player.color : '#ffffff',
+                pointsEarned: soal.answer.length * 2
+            });
+
+            room.validating.delete(soal.id);
+
+            if (Object.keys(room.completedWords).length === dataSoal.length) {
+                setTimeout(() => endGame(roomId, 'Semua Kata Selesai! 🎉'), 800);
+            }
+        }
+    });
+}
+
+function buildScores(room) {
+    const scores = {};
+    Object.values(room.players).forEach(p => {
+        scores[p.username] = { score: p.score, color: p.color };
+    });
+    return scores;
+}
 
 // --- AUTH API ---
 
@@ -77,8 +223,6 @@ app.post('/api/logout', (req, res) => {
     res.json({ message: 'Logout berhasil' });
 });
 
-// --- DATA API ---
-
 app.get('/api/me', (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: 'Not authenticated' });
@@ -93,10 +237,6 @@ app.get('/api/me', (req, res) => {
 
 app.get('/api/soal', (req, res) => {
     res.json(readSoal());
-});
-
-app.get('/api/leaderboard', (req, res) => {
-    res.json(scores);
 });
 
 // --- WEBSOCKET AUTH ---
@@ -121,74 +261,106 @@ io.use((socket, next) => {
 
 io.on('connection', (socket) => {
     const username = socket.user.username;
-    console.log(`User connected: ${username} (${socket.id})`);
+    console.log(`Connected: ${username} (${socket.id})`);
 
-    // Send initial state
-    socket.emit('init_game', {
-        soal: readSoal(),
-        grid: gridState,
-        completedWords: completedWords,
-        scores: scores
+    socket.on('get_rooms', () => {
+        socket.emit('room_list', getRoomList());
     });
 
-    socket.on('cell_update', (data) => {
-        const { row, col, char } = data;
-        const cellId = `${row}-${col}`;
+    socket.on('join_room', ({ roomId }) => {
+        if (!roomId) return;
+        
+        let room = rooms.get(roomId);
+        if (!room) {
+            room = createRoom(roomId);
+            rooms.set(roomId, room);
+        }
 
-        if (!gridState[cellId] || !gridState[cellId].locked) {
-            gridState[cellId] = { char: char.toUpperCase(), lastBy: username };
-            socket.broadcast.emit('cell_updated', { row, col, char: char.toUpperCase(), username });
-            checkWordCompletion(username);
+        if (Object.keys(room.players).length >= MAX_PLAYERS_PER_ROOM) {
+            socket.emit('join_error', { message: 'Room penuh!' });
+            return;
+        }
+
+        if (room.gameOver) {
+            socket.emit('join_error', { message: 'Permainan sudah selesai.' });
+            return;
+        }
+
+        const color = assignColor(room);
+        room.players[socket.id] = { username, score: 0, color, socketId: socket.id };
+        socket.join(roomId);
+        socket.data.roomId = roomId;
+        socket.data.username = username;
+
+        socket.emit('game_state', {
+            soal: readSoal(),
+            grid: room.gridState,
+            completedWords: room.completedWords,
+            scores: buildScores(room),
+            timeLeft: room.timeLeft,
+            gameStarted: room.gameStarted,
+            gameOver: room.gameOver,
+            myColor: color
+        });
+
+        io.to(roomId).emit('player_joined', {
+            username,
+            color,
+            players: Object.values(room.players).map(p => ({ username: p.username, score: p.score, color: p.color }))
+        });
+
+        io.emit('room_list', getRoomList());
+
+        if (!room.gameStarted) {
+            startTimer(roomId);
+        }
+    });
+
+    socket.on('cell_update', ({ row, col, char }) => {
+        const roomId = socket.data.roomId;
+        if (!roomId) return;
+
+        const room = rooms.get(roomId);
+        if (!room || room.gameOver) return;
+
+        const cellId = `${row}-${col}`;
+        if (room.gridState[cellId] && room.gridState[cellId].locked) return;
+
+        room.gridState[cellId] = {
+            char: char ? char.toUpperCase() : '',
+            locked: false,
+            lastBy: username
+        };
+
+        socket.to(roomId).emit('cell_updated', { row, col, char: char ? char.toUpperCase() : '', username });
+
+        if (char) {
+            checkWordCompletion(room, roomId, username);
         }
     });
 
     socket.on('disconnect', () => {
-        console.log(`User disconnected: ${username}`);
+        const roomId = socket.data.roomId;
+        if (roomId) {
+            const room = rooms.get(roomId);
+            if (room) {
+                delete room.players[socket.id];
+                io.to(roomId).emit('player_left', {
+                    username,
+                    players: Object.values(room.players).map(p => ({ username: p.username, score: p.score, color: p.color }))
+                });
+                if (Object.keys(room.players).length === 0 && !room.gameStarted) {
+                    clearInterval(room.timer);
+                    rooms.delete(roomId);
+                }
+            }
+        }
+        io.emit('room_list', getRoomList());
+        console.log(`Disconnected: ${username}`);
     });
 });
 
-function checkWordCompletion(username) {
-    const dataSoal = readSoal();
-    dataSoal.forEach(soal => {
-        if (completedWords[soal.id]) return;
-
-        let isCorrect = true;
-        for (let i = 0; i < soal.answer.length; i++) {
-            let r = soal.row;
-            let c = soal.col;
-            if (soal.direction === 'across') c += i;
-            else r += i;
-
-            const cellId = `${r}-${c}`;
-            const cell = gridState[cellId];
-            if (!cell || cell.char !== soal.answer[i].toUpperCase()) {
-                isCorrect = false;
-                break;
-            }
-        }
-
-        if (isCorrect) {
-            completedWords[soal.id] = username;
-            if (!scores[username]) scores[username] = 0;
-            scores[username] += 10;
-
-            for (let i = 0; i < soal.answer.length; i++) {
-                let r = soal.row, c = soal.col;
-                if (soal.direction === 'across') c += i; else r += i;
-                gridState[`${r}-${c}`].locked = true;
-            }
-
-            io.emit('word_completed', {
-                wordId: soal.id,
-                username: username,
-                scores: scores,
-                answer: soal.answer
-            });
-        }
-    });
-}
-
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`🔥 Scrabble Fire running at http://localhost:${PORT}`);
 });
