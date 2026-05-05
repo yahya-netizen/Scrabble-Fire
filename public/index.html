@@ -4,202 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scrable Fire - Real-time Crossword</title>
-    <style>
-        :root {
-            --fire-bg: #1a0a0a;
-            --fire-orange: #ff4500;
-            --fire-yellow: #ffcc00;
-            --fire-red: #8b0000;
-            --cell-size: 40px;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--fire-bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        h1 {
-            color: var(--fire-orange);
-            text-shadow: 0 0 10px var(--fire-red);
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-
-        .game-container {
-            display: flex;
-            gap: 30px;
-            padding: 20px;
-            max-width: 1300px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        #grid-wrapper {
-            position: relative;
-            padding: 10px;
-            background: #222;
-            border: 5px solid var(--fire-red);
-            box-shadow: 0 0 30px rgba(255, 69, 0, 0.4);
-        }
-
-        #grid {
-            display: grid;
-            grid-template-columns: repeat(15, var(--cell-size));
-            grid-template-rows: repeat(15, var(--cell-size));
-            gap: 2px;
-            background: #444;
-        }
-
-        .cell-container {
-            position: relative;
-            width: var(--cell-size);
-            height: var(--cell-size);
-            background: #000;
-        }
-
-        .cell-number {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: 10px;
-            color: var(--fire-yellow);
-            z-index: 10;
-            pointer-events: none;
-        }
-
-        .cell {
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            border: none;
-            color: white;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            text-transform: uppercase;
-            outline: none;
-            padding: 0;
-            display: none; /* Hidden by default, shown if part of a word */
-        }
-
-        .cell.active {
-            display: block;
-            background: #111;
-            cursor: text;
-        }
-
-        .cell.active:focus {
-            background: #333;
-            box-shadow: inset 0 0 8px var(--fire-orange);
-        }
-
-        .cell.locked {
-            color: var(--fire-yellow);
-            background: #000;
-            cursor: default;
-        }
-
-        .cell.typing-effect {
-            animation: fire-pulse 0.4s ease-out;
-        }
-
-        @keyframes fire-pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 var(--fire-orange); }
-            50% { transform: scale(1.1); box-shadow: 0 0 15px var(--fire-orange); }
-            100% { transform: scale(1); box-shadow: 0 0 0 var(--fire-orange); }
-        }
-
-        .sidebar {
-            width: 350px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .panel {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 20px;
-            border-radius: 12px;
-            border-top: 3px solid var(--fire-orange);
-            backdrop-filter: blur(5px);
-        }
-
-        .panel h2 {
-            margin-top: 0;
-            font-size: 1.3rem;
-            color: var(--fire-orange);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .clue-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .clue-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #333;
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-
-        .clue-item:last-child { border-bottom: none; }
-
-        .clue-item.completed {
-            text-decoration: line-through;
-            color: #555;
-            background: rgba(0, 255, 0, 0.05);
-        }
-
-        #scores li {
-            padding: 10px;
-            background: rgba(0,0,0,0.3);
-            margin-bottom: 5px;
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-        }
-
-        .username-display {
-            font-size: 0.8rem;
-            color: var(--fire-yellow);
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-    <h1>🔥 SCRABLE FIRE 🔥</h1>
-    <div class="username-display" id="user-info"></div>
-
-    <div class="game-container">
-        <div id="grid-wrapper">
-            <div id="grid"></div>
-        </div>
-
-        <div class="sidebar">
-            <div class="panel">
-                <h2>Leaderboard</h2>
-                <ul id="scores"></ul>
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="overlay">
+        <div class="auth-card">
+            <h1>🔥 SCRABLE FIRE 🔥</h1>
+            <div id="auth-forms">
+                <div id="login-form">
+                    <h2>Login</h2>
+                    <input type="text" id="login-username" placeholder="Username">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button id="btn-login">Login</button>
+                    <p>Belum punya akun? <a href="#" id="show-register">Daftar di sini</a></p>
+                </div>
+                <div id="register-form" style="display: none;">
+                    <h2>Daftar Akun</h2>
+                    <input type="text" id="reg-username" placeholder="Username">
+                    <input type="password" id="reg-password" placeholder="Password">
+                    <button id="btn-register">Daftar</button>
+                    <p>Sudah punya akun? <a href="#" id="show-login">Login di sini</a></p>
+                </div>
             </div>
-            <div class="panel">
-                <h2>Pertanyaan</h2>
-                <div class="clue-list">
-                    <div id="clues-across">
-                        <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Mendatar</h3>
-                        <ul id="list-across"></ul>
-                    </div>
-                    <div id="clues-down" style="margin-top: 15px;">
-                        <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Menurun</h3>
-                        <ul id="list-down"></ul>
+            <p id="auth-message" style="color: #ffcc00; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <!-- Main Game UI -->
+    <div id="game-ui" style="display: none;">
+        <header>
+            <h1>🔥 SCRABLE FIRE 🔥</h1>
+            <div class="user-bar">
+                <span id="user-info">Pemain: -</span>
+                <button id="btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <div class="game-container">
+            <div id="grid-wrapper">
+                <div id="grid"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>Leaderboard</h2>
+                    <ul id="scores"></ul>
+                </div>
+                <div class="panel">
+                    <h2>Pertanyaan</h2>
+                    <div class="clue-list">
+                        <div id="clues-across">
+                            <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Mendatar</h3>
+                            <ul id="list-across"></ul>
+                        </div>
+                        <div id="clues-down" style="margin-top: 15px;">
+                            <h3 style="color: var(--fire-yellow); font-size: 0.9rem;">Menurun</h3>
+                            <ul id="list-down"></ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -207,178 +70,6 @@
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        let myUsername = prompt("Masukkan nama Anda:") || "Anonim_" + Math.floor(Math.random() * 100);
-        document.getElementById('user-info').innerText = `Pemain: ${myUsername}`;
-        
-        const gridElement = document.getElementById('grid');
-        const listAcross = document.getElementById('list-across');
-        const listDown = document.getElementById('list-down');
-        const scoresElement = document.getElementById('scores');
-
-        let gameState = {
-            soal: [],
-            grid: {},
-            completedWords: {},
-            scores: {}
-        };
-
-        // Initialize 15x15 empty grid
-        for (let r = 1; r <= 15; r++) {
-            for (let c = 1; c <= 15; c++) {
-                const container = document.createElement('div');
-                container.className = 'cell-container';
-                container.id = `cont-${r}-${c}`;
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.maxLength = 1;
-                input.className = 'cell';
-                input.id = `cell-${r}-${c}`;
-                input.dataset.row = r;
-                input.dataset.col = c;
-
-                input.addEventListener('input', (e) => {
-                    const char = e.target.value.toUpperCase();
-                    if (char) {
-                        socket.emit('cell_update', {
-                            row: r,
-                            col: c,
-                            char: char,
-                            username: myUsername
-                        });
-                        focusNext(r, c);
-                    }
-                });
-
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && !e.target.value) {
-                        focusPrev(r, c);
-                    }
-                });
-
-                container.appendChild(input);
-                gridElement.appendChild(container);
-            }
-        }
-
-        socket.on('init_game', (data) => {
-            gameState = data;
-            renderAll();
-        });
-
-        socket.on('cell_updated', (data) => {
-            const { row, col, char, username } = data;
-            const input = document.getElementById(`cell-${row}-${col}`);
-            input.value = char;
-            input.classList.add('typing-effect');
-            setTimeout(() => input.classList.remove('typing-effect'), 400);
-        });
-
-        socket.on('word_completed', (data) => {
-            const { wordId, username, scores, answer } = data;
-            gameState.completedWords[wordId] = username;
-            gameState.scores = scores;
-            renderAll();
-        });
-
-        function renderAll() {
-            // Reset grid
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.classList.remove('active', 'locked');
-                cell.disabled = true;
-            });
-            document.querySelectorAll('.cell-number').forEach(n => n.remove());
-
-            // Set clues and active cells
-            gameState.soal.forEach(s => {
-                // Add number
-                const startCont = document.getElementById(`cont-${s.row}-${s.col}`);
-                if (startCont && !startCont.querySelector('.cell-number')) {
-                    const numDiv = document.createElement('div');
-                    numDiv.className = 'cell-number';
-                    numDiv.innerText = s.number;
-                    startCont.appendChild(numDiv);
-                }
-
-                for (let i = 0; i < s.answer.length; i++) {
-                    let r = s.row;
-                    let c = s.col;
-                    if (s.direction === 'across') c += i;
-                    else r += i;
-
-                    const input = document.getElementById(`cell-${r}-${c}`);
-                    input.classList.add('active');
-                    input.disabled = false;
-
-                    const cellId = `${r}-${c}`;
-                    if (gameState.grid[cellId]) {
-                        input.value = gameState.grid[cellId].char;
-                        if (gameState.grid[cellId].locked) {
-                            input.classList.add('locked');
-                            input.disabled = true;
-                        }
-                    }
-                }
-            });
-
-            // Render Clues
-            listAcross.innerHTML = '';
-            listDown.innerHTML = '';
-            gameState.soal.forEach(s => {
-                const isDone = gameState.completedWords[s.id];
-                const li = document.createElement('li');
-                li.className = `clue-item ${isDone ? 'completed' : ''}`;
-                li.innerHTML = `<strong>${s.number}.</strong> ${s.clue}`;
-                
-                if (s.direction === 'across') listAcross.appendChild(li);
-                else listDown.appendChild(li);
-            });
-
-            // Render Scores
-            scoresElement.innerHTML = '';
-            Object.entries(gameState.scores).sort((a,b) => b[1] - a[1]).forEach(([name, score]) => {
-                scoresElement.innerHTML += `<li><span>${name}</span> <span>${score} Poin</span></li>`;
-            });
-        }
-
-        function focusNext(r, c) {
-            // Find which word we are currently typing in
-            const currentWord = gameState.soal.find(s => {
-                if (s.direction === 'across' && r === s.row && c >= s.col && c < s.col + s.answer.length) return true;
-                if (s.direction === 'down' && c === s.col && r >= s.row && r < s.row + s.answer.length) return true;
-                return false;
-            });
-
-            if (currentWord) {
-                let nextR = r, nextC = c;
-                if (currentWord.direction === 'across') nextC++;
-                else nextR++;
-
-                const nextInput = document.getElementById(`cell-${nextR}-${nextC}`);
-                if (nextInput && nextInput.classList.contains('active') && !nextInput.disabled) {
-                    nextInput.focus();
-                }
-            }
-        }
-
-        function focusPrev(r, c) {
-            const currentWord = gameState.soal.find(s => {
-                if (s.direction === 'across' && r === s.row && c > s.col && c < s.col + s.answer.length) return true;
-                if (s.direction === 'down' && c === s.col && r > s.row && r < s.row + s.answer.length) return true;
-                return false;
-            });
-
-            if (currentWord) {
-                let prevR = r, prevC = c;
-                if (currentWord.direction === 'across') prevC--;
-                else prevR--;
-
-                const prevInput = document.getElementById(`cell-${prevR}-${prevC}`);
-                if (prevInput) prevInput.focus();
-            }
-        }
-    </script>
+    <script src="js/client.js"></script>
 </body>
 </html>
