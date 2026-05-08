@@ -39,6 +39,7 @@ const rooms = new Map();
 function createRoom(roomId) {
     return {
         id: roomId,
+        starterSocketId: null,
         players: {},          // socketId → { username, score, color }
         gridState: {},        // "r-c" → { char, locked, lockedBy }
         completedWords: {},   // wordId → username
@@ -69,9 +70,14 @@ function assignColor(room) {
 
 function startTimer(roomId) {
     const room = rooms.get(roomId);
-    if (!room || room.timer) return;
+    if (!room || room.timer || room.gameOver) return;
 
     room.gameStarted = true;
+    io.to(roomId).emit('game_started', {
+        timeLeft: room.timeLeft,
+        message: 'Game dimulai!'
+    });
+
     room.timer = setInterval(() => {
         room.timeLeft--;
         io.to(roomId).emit('timer_update', { timeLeft: room.timeLeft });
@@ -176,6 +182,15 @@ function buildScores(room) {
         scores[p.username] = { score: p.score, color: p.color };
     });
     return scores;
+}
+
+function buildPlayers(room) {
+    return Object.values(room.players).map(p => ({
+        username: p.username,
+        score: p.score,
+        color: p.color,
+        canStart: p.socketId === room.starterSocketId
+    }));
 }
 
 // --- AUTH API ---
@@ -288,6 +303,9 @@ io.on('connection', (socket) => {
 
         const color = assignColor(room);
         room.players[socket.id] = { username, score: 0, color, socketId: socket.id };
+        if (!room.starterSocketId || !room.players[room.starterSocketId]) {
+            room.starterSocketId = socket.id;
+        }
         socket.join(roomId);
         socket.data.roomId = roomId;
         socket.data.username = username;
@@ -300,20 +318,35 @@ io.on('connection', (socket) => {
             timeLeft: room.timeLeft,
             gameStarted: room.gameStarted,
             gameOver: room.gameOver,
+            canStart: socket.id === room.starterSocketId,
+            starterUsername: room.players[room.starterSocketId]?.username || username,
             myColor: color
         });
 
         io.to(roomId).emit('player_joined', {
             username,
             color,
-            players: Object.values(room.players).map(p => ({ username: p.username, score: p.score, color: p.color }))
+            starterUsername: room.players[room.starterSocketId]?.username || username,
+            players: buildPlayers(room)
         });
 
         io.emit('room_list', getRoomList());
+    });
 
-        if (!room.gameStarted) {
-            startTimer(roomId);
+    socket.on('start_game', () => {
+        const roomId = socket.data.roomId;
+        if (!roomId) return;
+
+        const room = rooms.get(roomId);
+        if (!room || room.gameOver || room.gameStarted) return;
+
+        if (socket.id !== room.starterSocketId) {
+            socket.emit('start_error', { message: 'Hanya pemain pertama yang bisa memulai game.' });
+            return;
         }
+
+        startTimer(roomId);
+        io.emit('room_list', getRoomList());
     });
 
     socket.on('cell_update', ({ row, col, char }) => {
@@ -321,7 +354,7 @@ io.on('connection', (socket) => {
         if (!roomId) return;
 
         const room = rooms.get(roomId);
-        if (!room || room.gameOver) return;
+        if (!room || room.gameOver || !room.gameStarted) return;
 
         const cellId = `${row}-${col}`;
         if (room.gridState[cellId] && room.gridState[cellId].locked) return;
@@ -345,9 +378,13 @@ io.on('connection', (socket) => {
             const room = rooms.get(roomId);
             if (room) {
                 delete room.players[socket.id];
+                if (room.starterSocketId === socket.id) {
+                    room.starterSocketId = Object.keys(room.players)[0] || null;
+                }
                 io.to(roomId).emit('player_left', {
                     username,
-                    players: Object.values(room.players).map(p => ({ username: p.username, score: p.score, color: p.color }))
+                    starterUsername: room.starterSocketId ? room.players[room.starterSocketId].username : null,
+                    players: buildPlayers(room)
                 });
                 if (Object.keys(room.players).length === 0 && !room.gameStarted) {
                     clearInterval(room.timer);

@@ -2,7 +2,8 @@ let socket;
 let myUsername = null;
 let myColor = '#ff4500';
 let myRoomId = '';
-let gameState = { soal: [], grid: {}, completedWords: {}, scores: {} };
+let canStartGame = false;
+let gameState = { soal: [], grid: {}, completedWords: {}, scores: {}, gameStarted: false, starterUsername: null };
 
 // --- DOM Elements ---
 const authOverlay = document.getElementById('auth-overlay');
@@ -120,6 +121,7 @@ function initSocket() {
     socket.on('game_state', (data) => {
         gameState = data;
         myColor = data.myColor;
+        canStartGame = !!data.canStart;
         buildGrid();
         showScreen('game-screen');
 
@@ -133,20 +135,27 @@ function initSocket() {
         renderBoard();
         renderClues();
         renderPlayers(data.scores);
+        updateStartControls();
     });
 
-    socket.on('player_joined', ({ username, players }) => {
+    socket.on('player_joined', ({ username, players, starterUsername }) => {
         if (username !== myUsername) showToast(`${username} bergabung 👋`);
         const sc = {};
         players.forEach(p => sc[p.username] = { score: p.score, color: p.color });
+        gameState.starterUsername = starterUsername;
+        canStartGame = starterUsername === myUsername;
         renderPlayers(sc);
+        updateStartControls();
     });
 
-    socket.on('player_left', ({ username, players }) => {
+    socket.on('player_left', ({ username, players, starterUsername }) => {
         showToast(`${username} meninggalkan room`);
         const sc = {};
         players.forEach(p => sc[p.username] = { score: p.score, color: p.color });
+        gameState.starterUsername = starterUsername;
+        canStartGame = starterUsername === myUsername;
         renderPlayers(sc);
+        updateStartControls();
     });
 
     socket.on('cell_updated', ({ row, col, char, username }) => {
@@ -184,7 +193,15 @@ function initSocket() {
         showToast(isSelf ? `🎉 Kamu menjawab kata ${answer}! +${pointsEarned} poin` : `✅ ${username} menjawab "${answer}"!`, isSelf ? color : null);
     });
 
+    socket.on('game_started', ({ timeLeft, message }) => {
+        gameState.gameStarted = true;
+        updateTimer(timeLeft);
+        renderBoard();
+        updateStartControls();
+        showToast(message || 'Game dimulai!');
+    });
     socket.on('timer_update', ({ timeLeft }) => updateTimer(timeLeft));
+    socket.on('start_error', ({ message }) => showToast(message));
     socket.on('game_over', ({ reason, rankings, winner }) => showGameOver(reason, rankings, winner));
     
     socket.on('connect_error', (err) => {
@@ -201,6 +218,11 @@ function joinRoom() {
     if (!roomId) { document.getElementById('lobby-error').textContent = 'Masukkan ID room!'; return; }
     myRoomId = roomId;
     socket.emit('join_room', { roomId });
+}
+
+function startGame() {
+    if (!socket || !canStartGame || gameState.gameStarted) return;
+    socket.emit('start_game');
 }
 
 // ────────────────────────────────────────────────
@@ -222,6 +244,11 @@ function buildGrid() {
             input.id = `cell-${r}-${c}`; input.dataset.row = r; input.dataset.col = c;
             input.readOnly = true;
             input.addEventListener('input', (e) => {
+                if (!gameState.gameStarted) {
+                    e.target.value = '';
+                    showToast('Tunggu pemain pertama memulai game.');
+                    return;
+                }
                 const char = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase();
                 e.target.value = char;
                 if (char) {
@@ -260,7 +287,7 @@ function renderBoard() {
             let r = s.row, c = s.col;
             if (s.direction === 'across') c += i; else r += i;
             const input = document.getElementById(`cell-${r}-${c}`);
-            input.classList.add('active'); input.readOnly = false;
+            input.classList.add('active'); input.readOnly = !gameState.gameStarted;
             const cellId = `${r}-${c}`;
             const cellData = gameState.grid[cellId];
             if (cellData) {
@@ -305,6 +332,26 @@ function renderPlayers(scores) {
 // ────────────────────────────────────────────────
 //  UI HELPERS
 // ────────────────────────────────────────────────
+function updateStartControls() {
+    const status = document.getElementById('start-status');
+    const button = document.getElementById('btn-start-game');
+    if (!status || !button) return;
+
+    if (gameState.gameStarted) {
+        status.textContent = 'Game sedang berlangsung.';
+        button.style.display = 'none';
+        return;
+    }
+
+    if (canStartGame) {
+        status.textContent = 'Kamu pemain pertama. Mulai game saat pemain lain sudah siap.';
+        button.style.display = 'block';
+    } else {
+        status.textContent = `Menunggu pemain pertama${gameState.starterUsername ? ` (${gameState.starterUsername})` : ''} memulai game...`;
+        button.style.display = 'none';
+    }
+}
+
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = (id === 'lobby-screen' ? 'flex' : 'block');
@@ -320,12 +367,15 @@ function updateTimer(seconds) {
 
 function showGameOver(reason, rankings, winner) {
     document.getElementById('gameover-reason').textContent = reason;
-    document.getElementById('winner-name').textContent = winner || '-';
+    const winnerName = document.getElementById('winner-name');
+    const winnerBanner = document.querySelector('.winner-banner');
+    winnerName.textContent = winner || '-';
+    winnerBanner.classList.toggle('fire-winner', !!winner && winner !== 'Tidak Ada');
     const ul = document.getElementById('final-rankings');
     ul.innerHTML = '';
     rankings.forEach(r => {
         const li = document.createElement('li');
-        li.className = `rank-${r.rank}`;
+        li.className = `rank-${r.rank}${r.username === winner ? ' winner-fire' : ''}`;
         li.innerHTML = `<span class="rank-num">${r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : r.rank === 3 ? '🥉' : r.rank}</span><span class="dot" style="background:${r.color}"></span><span>${r.username}</span><span class="rank-score">${r.score} poin</span>`;
         ul.appendChild(li);
     });

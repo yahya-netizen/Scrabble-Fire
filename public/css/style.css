@@ -299,6 +299,16 @@ body {
     letter-spacing: 1px;
     margin-bottom: 10px;
 }
+.start-status {
+    color: #ccc;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+.start-game-btn {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    padding: 10px;
+}
 
 /* Players online */
 #players-list { list-style: none; }
@@ -384,14 +394,53 @@ body {
 .gameover-title { font-size: 2rem; font-weight: 900; color: var(--orange); margin-bottom: 4px; }
 .gameover-reason { color: var(--dim); margin-bottom: 24px; font-size: 0.9rem; }
 .winner-banner {
+    position: relative;
+    overflow: hidden;
     background: rgba(255,204,0,0.1);
     border: 2px solid var(--yellow);
     border-radius: 10px;
     padding: 14px;
     margin-bottom: 24px;
 }
+.winner-banner.fire-winner {
+    animation: fire-glow 0.9s ease-in-out infinite alternate;
+}
+.winner-banner.fire-winner::before,
+.winner-banner.fire-winner::after {
+    content: '';
+    position: absolute;
+    inset: -35% 8% auto;
+    height: 95px;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 20% 80%, rgba(255,69,0,0.85) 0 12px, transparent 24px),
+        radial-gradient(circle at 42% 70%, rgba(255,204,0,0.9) 0 10px, transparent 23px),
+        radial-gradient(circle at 62% 82%, rgba(255,90,0,0.8) 0 14px, transparent 27px),
+        radial-gradient(circle at 82% 72%, rgba(255,220,80,0.75) 0 9px, transparent 21px);
+    filter: blur(1px);
+    animation: flame-rise 1s linear infinite;
+}
+.winner-banner.fire-winner::after {
+    inset: auto 10% -45%;
+    transform: rotate(180deg);
+    opacity: 0.7;
+    animation-duration: 1.25s;
+}
 .winner-banner .trophy { font-size: 2rem; }
 .winner-banner .winner-name { font-size: 1.5rem; font-weight: 900; color: var(--yellow); }
+.winner-banner > * {
+    position: relative;
+    z-index: 1;
+}
+@keyframes fire-glow {
+    from { box-shadow: 0 0 18px rgba(255,69,0,0.45), inset 0 0 16px rgba(255,204,0,0.08); }
+    to { box-shadow: 0 0 34px rgba(255,69,0,0.9), inset 0 0 24px rgba(255,204,0,0.18); }
+}
+@keyframes flame-rise {
+    from { transform: translateY(18px) scaleX(0.95); opacity: 0.65; }
+    50% { transform: translateY(-2px) scaleX(1.05); opacity: 0.95; }
+    to { transform: translateY(-18px) scaleX(0.9); opacity: 0.55; }
+}
 .rankings { list-style: none; text-align: left; margin-bottom: 24px; }
 .rankings li {
     display: flex;
@@ -407,6 +456,28 @@ body {
 .rankings li.rank-1 { background: rgba(255,204,0,0.08); }
 .rankings li.rank-1 .rank-num { color: var(--yellow); }
 .rankings li .rank-score { margin-left: auto; font-weight: 700; color: var(--yellow); }
+.rankings li.winner-fire {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,69,0,0.8);
+    animation: fire-glow 0.9s ease-in-out infinite alternate;
+}
+.rankings li.winner-fire::before {
+    content: '';
+    position: absolute;
+    inset: auto 0 -28px;
+    height: 46px;
+    background:
+        radial-gradient(circle at 14% 100%, rgba(255,69,0,0.8) 0 8px, transparent 18px),
+        radial-gradient(circle at 34% 92%, rgba(255,204,0,0.8) 0 7px, transparent 16px),
+        radial-gradient(circle at 58% 100%, rgba(255,80,0,0.7) 0 9px, transparent 19px),
+        radial-gradient(circle at 80% 92%, rgba(255,220,80,0.7) 0 7px, transparent 16px);
+    animation: flame-rise 0.95s linear infinite;
+}
+.rankings li.winner-fire > * {
+    position: relative;
+    z-index: 1;
+}
 
 /* Auth Overlay Styles */
 .overlay {
