@@ -347,6 +347,12 @@ io.on('connection', (socket) => {
         if (!roomId) return;
         
         let room = rooms.get(roomId);
+        if (room && room.gameOver && Object.keys(room.players).length === 0) {
+            clearInterval(room.timer);
+            rooms.delete(roomId);
+            room = null;
+        }
+
         if (!room) {
             room = createRoom(roomId, settings);
             if (!room.soal.length) {
@@ -362,7 +368,7 @@ io.on('connection', (socket) => {
         }
 
         if (room.gameOver) {
-            socket.emit('join_error', { message: 'Permainan sudah selesai.' });
+            socket.emit('join_error', { message: 'Permainan sudah selesai. Tunggu semua pemain keluar, lalu buat room lagi dengan ID yang sama.' });
             return;
         }
 
@@ -454,7 +460,7 @@ io.on('connection', (socket) => {
                     starterUsername: room.starterSocketId ? room.players[room.starterSocketId].username : null,
                     players: buildPlayers(room)
                 });
-                if (Object.keys(room.players).length === 0 && !room.gameStarted) {
+                if (Object.keys(room.players).length === 0) {
                     clearInterval(room.timer);
                     rooms.delete(roomId);
                 }
