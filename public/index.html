@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>🔥 Scrabble Fire</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
@@ -117,24 +117,13 @@
             <span id="topbar-player" class="player-badge"></span>
             <span id="topbar-room" class="room-tag"></span>
         </div>
-        <div id="timer-display">3:00</div>
     </div>
 
     <div class="game-layout">
-        <div id="grid-wrapper">
-            <div id="grid"></div>
-        </div>
-
         <div class="sidebar">
-            <div class="panel" id="start-panel">
-                <h2>Status Game</h2>
-                <div id="start-status" class="start-status">Menunggu pemain pertama memulai game...</div>
-                <button id="btn-start-game" class="btn start-game-btn" onclick="startGame()" style="display:none;">Mulai Game</button>
-            </div>
-
-            <div class="panel">
-                <h2>Pemain Online</h2>
-                <ul id="players-list"></ul>
+            <div class="panel timer-panel">
+                <h2>Waktu</h2>
+                <div id="timer-display">3:00</div>
             </div>
 
             <div class="panel">
@@ -146,6 +135,21 @@
                     <ul id="list-down"></ul>
                 </div>
             </div>
+
+            <div class="panel" id="start-panel">
+                <h2>Status Game</h2>
+                <div id="start-status" class="start-status">Menunggu pemain pertama memulai game...</div>
+                <button id="btn-start-game" class="btn start-game-btn" onclick="startGame()" style="display:none;">Mulai Game</button>
+            </div>
+
+            <div class="panel">
+                <h2>Pemain Online</h2>
+                <ul id="players-list"></ul>
+            </div>
+        </div>
+
+        <div id="grid-wrapper">
+            <div id="grid"></div>
         </div>
     </div>
 </div>

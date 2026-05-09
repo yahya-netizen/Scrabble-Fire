@@ -5,6 +5,24 @@ let myRoomId = '';
 let canStartGame = false;
 let gameState = { soal: [], grid: {}, completedWords: {}, scores: {}, gameStarted: false, starterUsername: null };
 
+function lockBrowserZoom() {
+    document.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        const zoomKey = key === '+' || key === '-' || key === '=' || key === '0';
+        if ((e.ctrlKey || e.metaKey) && zoomKey) e.preventDefault();
+    });
+
+    document.addEventListener('gesturestart', (e) => e.preventDefault());
+    document.addEventListener('gesturechange', (e) => e.preventDefault());
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+}
+
 // --- DOM Elements ---
 const authOverlay = document.getElementById('auth-overlay');
 const lobbyScreen = document.getElementById('lobby-screen');
@@ -354,8 +372,14 @@ function updateStartControls() {
 
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = (id === 'lobby-screen' ? 'flex' : 'block');
-    if (id === 'game-screen' || id === 'gameover-screen') document.getElementById(id).style.display = 'flex';
+    const screen = document.getElementById(id);
+    if (id === 'game-screen') {
+        screen.style.display = 'grid';
+    } else if (id === 'lobby-screen' || id === 'gameover-screen') {
+        screen.style.display = 'flex';
+    } else {
+        screen.style.display = 'block';
+    }
 }
 
 function updateTimer(seconds) {
@@ -441,4 +465,5 @@ function focusWord(soal) {
 }
 
 // Start
+lockBrowserZoom();
 checkAuth();
