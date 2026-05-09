@@ -232,10 +232,12 @@ function initSocket() {
         showToast(isSelf ? `🎉 Kamu menjawab kata ${answer}! +${pointsEarned} poin` : `✅ ${username} menjawab "${answer}"!`, isSelf ? color : null);
     });
 
-    socket.on('game_started', ({ timeLeft, message }) => {
+    socket.on('game_started', ({ timeLeft, soal, message }) => {
         gameState.gameStarted = true;
+        if (Array.isArray(soal)) gameState.soal = soal;
         updateTimer(timeLeft);
         renderBoard();
+        renderClues();
         updateStartControls();
         showToast(message || 'Game dimulai!');
     });
@@ -365,6 +367,13 @@ function renderClues() {
     const listAcross = document.getElementById('list-across');
     const listDown = document.getElementById('list-down');
     listAcross.innerHTML = ''; listDown.innerHTML = '';
+
+    if (!gameState.gameStarted) {
+        listAcross.innerHTML = '<li class="clue-item locked-clue">Soal akan muncul setelah game dimulai.</li>';
+        listDown.innerHTML = '<li class="clue-item locked-clue">Menunggu pemain pertama menekan Mulai Game.</li>';
+        return;
+    }
+
     gameState.soal.forEach(s => {
         const isDone = gameState.completedWords[s.id];
         const solverColor = isDone && gameState.scores[isDone] ? gameState.scores[isDone].color : '#fff';

@@ -130,6 +130,7 @@ function startTimer(roomId) {
     room.gameStarted = true;
     io.to(roomId).emit('game_started', {
         timeLeft: room.timeLeft,
+        soal: room.soal,
         message: 'Game dimulai!'
     });
 
@@ -375,7 +376,7 @@ io.on('connection', (socket) => {
         socket.data.username = username;
 
         socket.emit('game_state', {
-            soal: room.soal,
+            soal: room.gameStarted ? room.soal : [],
             grid: room.gridState,
             completedWords: room.completedWords,
             scores: buildScores(room),

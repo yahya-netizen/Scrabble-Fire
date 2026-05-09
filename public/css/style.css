@@ -441,6 +441,14 @@ select.field-input {
 .clue-item.completed { text-decoration: line-through; color: var(--dim); cursor: default; }
 .clue-item.completed:hover { color: var(--dim); }
 .clue-item .solved-by { font-size: 0.72rem; font-weight: 700; }
+.clue-item.locked-clue {
+    color: var(--dim);
+    cursor: default;
+    font-style: italic;
+}
+.clue-item.locked-clue:hover {
+    color: var(--dim);
+}
 
 /* Toast notification */
 #toast-container {
