@@ -3,6 +3,8 @@ let myUsername = null;
 let myColor = '#ff4500';
 let myRoomId = '';
 let canStartGame = false;
+let questionCategories = [];
+let latestRooms = [];
 let gameState = { soal: [], grid: {}, completedWords: {}, scores: {}, gameStarted: false, starterUsername: null };
 
 function lockBrowserZoom() {
@@ -54,12 +56,29 @@ function showAuth() {
     gameScreen.style.display = 'none';
 }
 
-function startAs(username) {
+async function startAs(username) {
     myUsername = username;
     document.getElementById('lobby-user-display').innerText = username;
     authOverlay.style.display = 'none';
     lobbyScreen.style.display = 'flex';
+    await loadCategories();
     initSocket();
+}
+
+async function loadCategories() {
+    const select = document.getElementById('inp-category');
+    if (!select) return;
+
+    try {
+        const res = await fetch('/api/categories');
+        questionCategories = await res.json();
+        select.innerHTML = questionCategories.map(category => (
+            `<option value="${category.id}">${category.name} (${category.questionCount} soal)</option>`
+        )).join('');
+    } catch (e) {
+        questionCategories = [];
+        select.innerHTML = '<option value="web">Pemrograman Web</option>';
+    }
 }
 
 // --- Auth Events ---
@@ -115,6 +134,7 @@ function initSocket() {
     });
 
     socket.on('room_list', (rooms) => {
+        latestRooms = rooms;
         const container = document.getElementById('room-list');
         if (!rooms.length) {
             container.innerHTML = '<div id="no-rooms">Belum ada room aktif. Buat room baru!</div>';
@@ -124,7 +144,7 @@ function initSocket() {
             <div class="room-item" onclick="pickRoom('${r.id}')">
                 <div>
                     <div class="room-id">${r.id}</div>
-                    <div class="room-meta">${r.playerCount}/${r.maxPlayers} pemain</div>
+                    <div class="room-meta">${r.playerCount}/${r.maxPlayers} pemain | ${r.categoryName || 'Kategori'} | ${formatDuration(r.duration)}</div>
                 </div>
                 <span class="room-badge ${r.gameStarted ? 'started' : ''}">
                     ${r.gameStarted ? 'Berlangsung' : 'Menunggu'}
@@ -148,6 +168,7 @@ function initSocket() {
         badge.style.color = myColor;
         badge.style.borderColor = myColor;
         document.getElementById('topbar-room').textContent = `Room: ${myRoomId}`;
+        document.getElementById('topbar-room').title = `${data.categoryName || 'Kategori'} | ${formatDuration(data.duration)}`;
 
         updateTimer(data.timeLeft);
         renderBoard();
@@ -229,13 +250,34 @@ function initSocket() {
 
 function pickRoom(id) {
     document.getElementById('inp-room').value = id;
+    const room = latestRooms.find(r => r.id === id);
+    if (!room) return;
+
+    const categorySelect = document.getElementById('inp-category');
+    const durationSelect = document.getElementById('inp-duration');
+    if (categorySelect && room.categoryId) categorySelect.value = room.categoryId;
+    if (durationSelect && room.duration) durationSelect.value = String(room.duration);
 }
 
 function joinRoom() {
     const roomId = document.getElementById('inp-room').value.trim();
     if (!roomId) { document.getElementById('lobby-error').textContent = 'Masukkan ID room!'; return; }
     myRoomId = roomId;
-    socket.emit('join_room', { roomId });
+    socket.emit('join_room', {
+        roomId,
+        settings: {
+            categoryId: document.getElementById('inp-category')?.value,
+            duration: Number(document.getElementById('inp-duration')?.value || 180)
+        }
+    });
+}
+
+function formatDuration(seconds) {
+    const totalSeconds = Number(seconds) || 180;
+    const minutes = Math.floor(totalSeconds / 60);
+    const remainingSeconds = totalSeconds % 60;
+    if (!remainingSeconds) return `${minutes} menit`;
+    return `${minutes}:${String(remainingSeconds).padStart(2, '0')} menit`;
 }
 
 function startGame() {

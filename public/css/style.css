@@ -79,6 +79,18 @@ body {
     margin-bottom: 18px;
 }
 .field-input:focus { border-color: var(--orange); }
+.room-settings {
+    display: grid;
+    grid-template-columns: 1fr 140px;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.room-settings .field-input {
+    margin-bottom: 0;
+}
+select.field-input {
+    cursor: pointer;
+}
 .btn {
     width: 100%;
     background: var(--orange);

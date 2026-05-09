@@ -97,6 +97,24 @@
         <label class="field-label">ID Room</label>
         <input id="inp-room" class="field-input" placeholder="Ketik ID room baru atau pilih di bawah..." maxlength="20" autocomplete="off">
 
+        <div class="room-settings">
+            <div>
+                <label class="field-label">Kategori Soal</label>
+                <select id="inp-category" class="field-input">
+                    <option value="">Memuat kategori...</option>
+                </select>
+            </div>
+            <div>
+                <label class="field-label">Durasi</label>
+                <select id="inp-duration" class="field-input">
+                    <option value="120">2 menit</option>
+                    <option value="180" selected>3 menit</option>
+                    <option value="300">5 menit</option>
+                    <option value="600">10 menit</option>
+                </select>
+            </div>
+        </div>
+
         <button class="btn" onclick="joinRoom()">🚀 Masuk / Buat Room</button>
         <div id="lobby-error" class="error-msg"></div>
 

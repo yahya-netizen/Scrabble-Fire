@@ -27,24 +27,71 @@ app.use(express.static('public'));
 // Helpers for persistence
 const readUsers = () => JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 const writeUsers = (users) => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-const readSoal = () => JSON.parse(fs.readFileSync(SOAL_FILE, 'utf8'));
+const readSoalData = () => JSON.parse(fs.readFileSync(SOAL_FILE, 'utf8'));
+const normalizeSoalData = () => {
+    const data = readSoalData();
+    if (Array.isArray(data)) {
+        return {
+            categories: [
+                {
+                    id: 'default',
+                    name: 'Default',
+                    description: 'Kategori bawaan dari format soal lama.',
+                    questions: data
+                }
+            ]
+        };
+    }
+    return data;
+};
+const getCategories = () => normalizeSoalData().categories.map(category => ({
+    id: category.id,
+    name: category.name || category.id,
+    description: category.description || '',
+    questionCount: Array.isArray(category.questions) ? category.questions.length : 0
+}));
+const getCategoryById = (categoryId) => {
+    const categories = normalizeSoalData().categories;
+    return categories.find(category => category.id === categoryId) || categories[0];
+};
+const getSoalByCategory = (categoryId) => {
+    const category = getCategoryById(categoryId);
+    return category && Array.isArray(category.questions) ? category.questions : [];
+};
 
 // ─────────────────────────────────────────────
 //  ROOM MANAGEMENT
 // ─────────────────────────────────────────────
-const GAME_DURATION = 180; // seconds
+const DEFAULT_GAME_DURATION = 180; // seconds
 const MAX_PLAYERS_PER_ROOM = 4;
 const rooms = new Map();
 
-function createRoom(roomId) {
+function normalizeDuration(duration) {
+    const parsed = Number(duration);
+    if (!Number.isFinite(parsed)) return DEFAULT_GAME_DURATION;
+    return Math.min(Math.max(Math.round(parsed), 60), 1800);
+}
+
+function createRoom(roomId, settings = {}) {
+    const category = getCategoryById(settings.categoryId) || {
+        id: 'empty',
+        name: 'Tanpa Kategori',
+        questions: []
+    };
+    const duration = normalizeDuration(settings.duration);
+
     return {
         id: roomId,
+        categoryId: category.id,
+        categoryName: category.name,
+        duration,
+        soal: getSoalByCategory(category.id),
         starterSocketId: null,
         players: {},          // socketId → { username, score, color }
         gridState: {},        // "r-c" → { char, locked, lockedBy }
         completedWords: {},   // wordId → username
         timer: null,
-        timeLeft: GAME_DURATION,
+        timeLeft: duration,
         gameStarted: false,
         gameOver: false,
         validating: new Set()
@@ -56,7 +103,15 @@ function getRoomList() {
     rooms.forEach((room, id) => {
         const playerCount = Object.keys(room.players).length;
         if (!room.gameOver && playerCount < MAX_PLAYERS_PER_ROOM) {
-            list.push({ id, playerCount, maxPlayers: MAX_PLAYERS_PER_ROOM, gameStarted: room.gameStarted });
+            list.push({
+                id,
+                playerCount,
+                maxPlayers: MAX_PLAYERS_PER_ROOM,
+                gameStarted: room.gameStarted,
+                categoryId: room.categoryId,
+                categoryName: room.categoryName,
+                duration: room.duration
+            });
         }
     });
     return list;
@@ -111,7 +166,7 @@ function endGame(roomId, reason) {
 }
 
 function checkWordCompletion(room, roomId, username) {
-    const dataSoal = readSoal();
+    const dataSoal = room.soal;
     dataSoal.forEach(soal => {
         if (room.completedWords[soal.id]) return;
         if (room.validating.has(soal.id)) return;
@@ -251,7 +306,12 @@ app.get('/api/me', (req, res) => {
 });
 
 app.get('/api/soal', (req, res) => {
-    res.json(readSoal());
+    const categoryId = req.query.category;
+    res.json(categoryId ? getSoalByCategory(categoryId) : normalizeSoalData());
+});
+
+app.get('/api/categories', (req, res) => {
+    res.json(getCategories());
 });
 
 // --- WEBSOCKET AUTH ---
@@ -282,12 +342,16 @@ io.on('connection', (socket) => {
         socket.emit('room_list', getRoomList());
     });
 
-    socket.on('join_room', ({ roomId }) => {
+    socket.on('join_room', ({ roomId, settings }) => {
         if (!roomId) return;
         
         let room = rooms.get(roomId);
         if (!room) {
-            room = createRoom(roomId);
+            room = createRoom(roomId, settings);
+            if (!room.soal.length) {
+                socket.emit('join_error', { message: 'Kategori soal ini belum punya soal.' });
+                return;
+            }
             rooms.set(roomId, room);
         }
 
@@ -311,11 +375,14 @@ io.on('connection', (socket) => {
         socket.data.username = username;
 
         socket.emit('game_state', {
-            soal: readSoal(),
+            soal: room.soal,
             grid: room.gridState,
             completedWords: room.completedWords,
             scores: buildScores(room),
             timeLeft: room.timeLeft,
+            duration: room.duration,
+            categoryId: room.categoryId,
+            categoryName: room.categoryName,
             gameStarted: room.gameStarted,
             gameOver: room.gameOver,
             canStart: socket.id === room.starterSocketId,
