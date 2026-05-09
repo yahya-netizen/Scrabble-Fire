@@ -80,6 +80,49 @@
             ]
         },
         {
+            "id": "h2h",
+            "name": "Hearts2Hearts",
+            "description": "Soal Test Pengetahuan tentang Hearts2Hearts",
+            "questions": [
+                {
+                    "id": "h2h-1",
+                    "number": 1,
+                    "answer": "ChoiJiwoo",
+                    "row": 2,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Nama lengkap leader Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-2",
+                    "number": 2,
+                    "answer": "KimJueun",
+                    "row": 1,
+                    "col": 4,
+                    "direction": "down",
+                    "clue": "Nama lengkap main dancer Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-3",
+                    "number": 3,
+                    "answer": "TheChase",
+                    "row": 6,
+                    "col": 2,
+                    "direction": "across",
+                    "clue": "Lagu debut Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-4",
+                    "number": 4,
+                    "answer": "Carmen",
+                    "row": 5,
+                    "col": 7,
+                    "direction": "down",
+                    "clue": "Nama member Hearts2Hearts asal indonesia"
+                }
+            ]
+        },
+        {
             "id": "template",
             "name": "Template Kategori Baru",
             "description": "Salin kategori ini, ganti id/name/description, lalu isi questions.",
