@@ -203,7 +203,8 @@ function initSocket() {
         input.value = char;
         input.classList.add('typing-other');
         setTimeout(() => input.classList.remove('typing-other'), 500);
-        gameState.grid[`${row}-${col}`] = { char, locked: false, lastBy: username };
+        const playerColor = gameState.scores[username] ? gameState.scores[username].color : '#ffffff';
+        gameState.grid[`${row}-${col}`] = { char, locked: false, lastBy: username, lastColor: playerColor };
     });
 
     socket.on('word_completed', (data) => {
@@ -243,7 +244,10 @@ function initSocket() {
     });
     socket.on('timer_update', ({ timeLeft }) => updateTimer(timeLeft));
     socket.on('start_error', ({ message }) => showToast(message));
-    socket.on('game_over', ({ reason, rankings, winner }) => showGameOver(reason, rankings, winner));
+    socket.on('game_over', ({ reason, rankings, winner, winnerColor, burnedCells }) => {
+        playWinnerBurnEffect({ winner, winnerColor, burnedCells });
+        setTimeout(() => showGameOver(reason, rankings, winner), 2400);
+    });
     
     socket.on('connect_error', (err) => {
         if (err.message === 'Authentication error') showAuth();
@@ -438,6 +442,78 @@ function updateTimer(seconds) {
     const m = Math.floor(seconds / 60); const s = seconds % 60;
     el.textContent = `${m}:${String(s).padStart(2, '0')}`;
     el.classList.toggle('urgent', seconds <= 30);
+}
+
+function playWinnerBurnEffect({ winner, winnerColor, burnedCells = [] }) {
+    if (!winner || winner === 'Tidak Ada' || !Array.isArray(burnedCells) || !burnedCells.length) {
+        showToast('Permainan selesai!');
+        return;
+    }
+
+    const gridWrapper = document.getElementById('grid-wrapper');
+    const grid = document.getElementById('grid');
+    clearBurnEffects();
+
+    const scorchLayer = document.createElement('div');
+    scorchLayer.className = 'burn-scorch-layer';
+    if (winnerColor) scorchLayer.style.setProperty('--winner-color', winnerColor);
+    gridWrapper.appendChild(scorchLayer);
+
+    const banner = document.createElement('div');
+    banner.className = 'burn-victory-banner';
+    banner.innerHTML = `<span>&#128293; ${winner} membakar kotak lawan!</span>`;
+    if (winnerColor) banner.style.setProperty('--winner-color', winnerColor);
+    gridWrapper.appendChild(banner);
+
+    grid.classList.add('board-burn-active');
+    const orderedCells = burnedCells
+        .slice()
+        .sort((a, b) => ((a.row - 8) ** 2 + (a.col - 8) ** 2) - ((b.row - 8) ** 2 + (b.col - 8) ** 2));
+
+    orderedCells.forEach((cell, index) => {
+        const input = document.getElementById(`cell-${cell.row}-${cell.col}`);
+        const container = document.getElementById(`cont-${cell.row}-${cell.col}`);
+        if (!input || !container) return;
+
+        setTimeout(() => {
+            input.classList.add('enemy-burned-cell');
+            input.classList.toggle('enemy-burned-locked', !!cell.locked);
+            input.style.setProperty('--enemy-color', cell.color || '#ffcc00');
+            spawnFireBurst(container, winnerColor);
+        }, Math.min(index * 48, 940));
+    });
+
+    setTimeout(() => {
+        grid.classList.remove('board-burn-active');
+        banner.remove();
+        scorchLayer.remove();
+    }, 2300);
+}
+
+function clearBurnEffects() {
+    document.querySelectorAll('.burn-victory-banner, .burn-scorch-layer, .cell-flame, .fire-spark').forEach(el => el.remove());
+    document.querySelectorAll('.enemy-burned-cell').forEach(cell => {
+        cell.classList.remove('enemy-burned-cell', 'enemy-burned-locked');
+        cell.style.removeProperty('--enemy-color');
+    });
+}
+
+function spawnFireBurst(container, winnerColor) {
+    const flame = document.createElement('div');
+    flame.className = 'cell-flame';
+    flame.style.setProperty('--winner-color', winnerColor || '#ff4500');
+    container.appendChild(flame);
+
+    for (let i = 0; i < 5; i++) {
+        const spark = document.createElement('span');
+        spark.className = 'fire-spark';
+        spark.style.setProperty('--spark-x', `${(Math.random() * 34) - 17}px`);
+        spark.style.setProperty('--spark-delay', `${Math.random() * 0.22}s`);
+        container.appendChild(spark);
+        setTimeout(() => spark.remove(), 1150);
+    }
+
+    setTimeout(() => flame.remove(), 1500);
 }
 
 function showGameOver(reason, rankings, winner) {

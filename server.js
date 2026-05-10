@@ -157,11 +157,28 @@ function endGame(roomId, reason) {
         .map((p, i) => ({ rank: i + 1, username: p.username, score: p.score, color: p.color }));
 
     const winner = rankings[0] || null;
+    const burnedCells = winner ? Object.entries(room.gridState)
+        .filter(([, cell]) => cell && cell.char && (cell.lockedBy || cell.lastBy) && (cell.lockedBy || cell.lastBy) !== winner.username)
+        .map(([cellId, cell]) => {
+            const [row, col] = cellId.split('-').map(Number);
+            const owner = cell.lockedBy || cell.lastBy;
+            const ownerPlayer = Object.values(room.players).find(p => p.username === owner);
+            return {
+                row,
+                col,
+                char: cell.char,
+                owner,
+                locked: !!cell.locked,
+                color: ownerPlayer ? ownerPlayer.color : cell.lockedColor || cell.lastColor || '#ffffff'
+            };
+        }) : [];
 
     io.to(roomId).emit('game_over', {
         reason,
         rankings,
         winner: winner ? winner.username : 'Tidak Ada',
+        winnerColor: winner ? winner.color : null,
+        burnedCells,
         completedWords: room.completedWords
     });
 }
@@ -433,10 +450,12 @@ io.on('connection', (socket) => {
         const cellId = `${row}-${col}`;
         if (room.gridState[cellId] && room.gridState[cellId].locked) return;
 
+        const player = room.players[socket.id];
         room.gridState[cellId] = {
             char: char ? char.toUpperCase() : '',
             locked: false,
-            lastBy: username
+            lastBy: username,
+            lastColor: player ? player.color : '#ffffff'
         };
 
         socket.to(roomId).emit('cell_updated', { row, col, char: char ? char.toUpperCase() : '', username });
