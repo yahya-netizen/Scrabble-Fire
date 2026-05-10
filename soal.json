@@ -76,6 +76,24 @@
                     "col": 4,
                     "direction": "across",
                     "clue": "Pengiriman pesan ke semua klien yang terhubung di satu room Socket.io"
+                },
+                {
+                    "id": "web-9",
+                    "number": 9,
+                    "answer": "COOKIE",
+                    "row": 3,
+                    "col": 13,
+                    "direction": "down",
+                    "clue": "Data kecil yang disimpan browser untuk sesi atau preferensi pengguna"
+                },
+                {
+                    "id": "web-10",
+                    "number": 10,
+                    "answer": "ROUTER",
+                    "row": 15,
+                    "col": 2,
+                    "direction": "across",
+                    "clue": "Komponen yang mengarahkan request ke handler sesuai URL"
                 }
             ]
         },
@@ -119,31 +137,340 @@
                     "col": 7,
                     "direction": "down",
                     "clue": "Nama member Hearts2Hearts asal indonesia"
+                },
+                {
+                    "id": "h2h-5",
+                    "number": 5,
+                    "answer": "SMTOWN",
+                    "row": 9,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Keluarga agensi yang menaungi Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-6",
+                    "number": 6,
+                    "answer": "DEBUT",
+                    "row": 10,
+                    "col": 10,
+                    "direction": "down",
+                    "clue": "Momen perilisan pertama grup ke publik"
                 }
             ]
         },
         {
-            "id": "template",
-            "name": "Template Kategori Baru",
-            "description": "Salin kategori ini, ganti id/name/description, lalu isi questions.",
+            "id": "algoritma",
+            "name": "Algoritma",
+            "description": "Soal tentang konsep dasar algoritma dan struktur data.",
             "questions": [
                 {
-                    "id": "template-1",
+                    "id": "algoritma-1",
                     "number": 1,
-                    "answer": "CONTOH",
+                    "answer": "LOOPING",
+                    "row": 2,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Proses mengulang instruksi selama kondisi tertentu terpenuhi"
+                },
+                {
+                    "id": "algoritma-2",
+                    "number": 2,
+                    "answer": "ARRAY",
+                    "row": 3,
+                    "col": 10,
+                    "direction": "across",
+                    "clue": "Struktur data berindeks untuk menyimpan banyak nilai"
+                },
+                {
+                    "id": "algoritma-3",
+                    "number": 3,
+                    "answer": "SORTING",
+                    "row": 5,
+                    "col": 3,
+                    "direction": "across",
+                    "clue": "Proses mengurutkan data dari kecil ke besar atau sebaliknya"
+                },
+                {
+                    "id": "algoritma-4",
+                    "number": 4,
+                    "answer": "STACK",
+                    "row": 1,
+                    "col": 13,
+                    "direction": "down",
+                    "clue": "Struktur data LIFO, data terakhir masuk keluar lebih dulu"
+                },
+                {
+                    "id": "algoritma-5",
+                    "number": 5,
+                    "answer": "QUEUE",
+                    "row": 8,
+                    "col": 5,
+                    "direction": "across",
+                    "clue": "Struktur data FIFO, data pertama masuk keluar lebih dulu"
+                },
+                {
+                    "id": "algoritma-6",
+                    "number": 6,
+                    "answer": "REKURSI",
+                    "row": 7,
+                    "col": 7,
+                    "direction": "down",
+                    "clue": "Teknik fungsi yang memanggil dirinya sendiri"
+                },
+                {
+                    "id": "algoritma-7",
+                    "number": 7,
+                    "answer": "BINARY",
+                    "row": 1,
+                    "col": 5,
+                    "direction": "down",
+                    "clue": "Sistem bilangan berbasis dua yang memakai angka 0 dan 1"
+                },
+                {
+                    "id": "algoritma-8",
+                    "number": 8,
+                    "answer": "GREEDY",
+                    "row": 5,
+                    "col": 9,
+                    "direction": "down",
+                    "clue": "Strategi algoritma yang memilih opsi terbaik secara lokal"
+                }
+            ]
+        },
+        {
+            "id": "database",
+            "name": "Basis Data",
+            "description": "Soal tentang SQL, relasi, dan pengelolaan data.",
+            "questions": [
+                {
+                    "id": "database-1",
+                    "number": 1,
+                    "answer": "DATABASE",
                     "row": 1,
                     "col": 1,
                     "direction": "across",
-                    "clue": "Contoh soal mendatar"
+                    "clue": "Kumpulan data terstruktur yang disimpan dan dikelola sistem"
                 },
                 {
-                    "id": "template-2",
+                    "id": "database-2",
                     "number": 2,
-                    "answer": "SOAL",
+                    "answer": "TABEL",
+                    "row": 2,
+                    "col": 11,
+                    "direction": "down",
+                    "clue": "Objek basis data berbentuk baris dan kolom"
+                },
+                {
+                    "id": "database-3",
+                    "number": 3,
+                    "answer": "QUERY",
+                    "row": 4,
+                    "col": 3,
+                    "direction": "across",
+                    "clue": "Perintah untuk mengambil atau memanipulasi data"
+                },
+                {
+                    "id": "database-4",
+                    "number": 4,
+                    "answer": "INDEX",
+                    "row": 6,
+                    "col": 14,
+                    "direction": "down",
+                    "clue": "Struktur bantu untuk mempercepat pencarian data"
+                },
+                {
+                    "id": "database-5",
+                    "number": 5,
+                    "answer": "PRIMARY",
+                    "row": 9,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Jenis key utama yang membedakan setiap record"
+                },
+                {
+                    "id": "database-6",
+                    "number": 6,
+                    "answer": "FOREIGN",
+                    "row": 8,
+                    "col": 8,
+                    "direction": "down",
+                    "clue": "Jenis key yang menghubungkan satu tabel dengan tabel lain"
+                },
+                {
+                    "id": "database-7",
+                    "number": 7,
+                    "answer": "JOIN",
+                    "row": 13,
+                    "col": 2,
+                    "direction": "across",
+                    "clue": "Operasi SQL untuk menggabungkan data dari beberapa tabel"
+                },
+                {
+                    "id": "database-8",
+                    "number": 8,
+                    "answer": "NORMAL",
+                    "row": 15,
+                    "col": 9,
+                    "direction": "across",
+                    "clue": "Bentuk data yang sudah ditata untuk mengurangi redundansi"
+                }
+            ]
+        },
+        {
+            "id": "jaringan",
+            "name": "Jaringan Komputer",
+            "description": "Soal tentang perangkat, protokol, dan konsep jaringan.",
+            "questions": [
+                {
+                    "id": "jaringan-1",
+                    "number": 1,
+                    "answer": "ROUTER",
                     "row": 1,
                     "col": 1,
+                    "direction": "across",
+                    "clue": "Perangkat yang mengarahkan paket data antarjaringan"
+                },
+                {
+                    "id": "jaringan-2",
+                    "number": 2,
+                    "answer": "SWITCH",
+                    "row": 2,
+                    "col": 9,
                     "direction": "down",
-                    "clue": "Contoh soal menurun"
+                    "clue": "Perangkat yang menghubungkan banyak perangkat dalam LAN"
+                },
+                {
+                    "id": "jaringan-3",
+                    "number": 3,
+                    "answer": "PACKET",
+                    "row": 4,
+                    "col": 2,
+                    "direction": "across",
+                    "clue": "Unit kecil data yang dikirim melalui jaringan"
+                },
+                {
+                    "id": "jaringan-4",
+                    "number": 4,
+                    "answer": "IP",
+                    "row": 6,
+                    "col": 13,
+                    "direction": "down",
+                    "clue": "Alamat numerik perangkat dalam jaringan"
+                },
+                {
+                    "id": "jaringan-5",
+                    "number": 5,
+                    "answer": "DNS",
+                    "row": 8,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Sistem yang menerjemahkan nama domain menjadi alamat IP"
+                },
+                {
+                    "id": "jaringan-6",
+                    "number": 6,
+                    "answer": "FIREWALL",
+                    "row": 8,
+                    "col": 6,
+                    "direction": "down",
+                    "clue": "Pengaman yang menyaring lalu lintas jaringan"
+                },
+                {
+                    "id": "jaringan-7",
+                    "number": 7,
+                    "answer": "BANDWIDTH",
+                    "row": 12,
+                    "col": 7,
+                    "direction": "across",
+                    "clue": "Kapasitas maksimal transfer data dalam jaringan"
+                },
+                {
+                    "id": "jaringan-8",
+                    "number": 8,
+                    "answer": "LATENCY",
+                    "row": 15,
+                    "col": 7,
+                    "direction": "across",
+                    "clue": "Waktu tunda saat data berpindah dari sumber ke tujuan"
+                }
+            ]
+        },
+        {
+            "id": "security",
+            "name": "Cyber Security",
+            "description": "Soal tentang keamanan aplikasi dan perlindungan data.",
+            "questions": [
+                {
+                    "id": "security-1",
+                    "number": 1,
+                    "answer": "ENKRIPSI",
+                    "row": 1,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Proses mengubah data agar tidak mudah dibaca pihak lain"
+                },
+                {
+                    "id": "security-2",
+                    "number": 2,
+                    "answer": "HASH",
+                    "row": 2,
+                    "col": 11,
+                    "direction": "down",
+                    "clue": "Representasi satu arah yang sering dipakai untuk menyimpan password"
+                },
+                {
+                    "id": "security-3",
+                    "number": 3,
+                    "answer": "PHISHING",
+                    "row": 4,
+                    "col": 2,
+                    "direction": "across",
+                    "clue": "Penipuan untuk mencuri data melalui pesan atau situs palsu"
+                },
+                {
+                    "id": "security-4",
+                    "number": 4,
+                    "answer": "MALWARE",
+                    "row": 5,
+                    "col": 14,
+                    "direction": "down",
+                    "clue": "Perangkat lunak berbahaya yang merusak atau mencuri data"
+                },
+                {
+                    "id": "security-5",
+                    "number": 5,
+                    "answer": "TOKEN",
+                    "row": 8,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Kode autentikasi yang dipakai untuk membuktikan identitas"
+                },
+                {
+                    "id": "security-6",
+                    "number": 6,
+                    "answer": "SANITASI",
+                    "row": 8,
+                    "col": 8,
+                    "direction": "down",
+                    "clue": "Pembersihan input pengguna agar tidak memicu serangan"
+                },
+                {
+                    "id": "security-7",
+                    "number": 7,
+                    "answer": "BACKUP",
+                    "row": 12,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Salinan data cadangan untuk pemulihan saat terjadi masalah"
+                },
+                {
+                    "id": "security-8",
+                    "number": 8,
+                    "answer": "OTP",
+                    "row": 15,
+                    "col": 10,
+                    "direction": "across",
+                    "clue": "Kode sekali pakai untuk verifikasi login atau transaksi"
                 }
             ]
         }
