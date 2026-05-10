@@ -98,67 +98,6 @@
             ]
         },
         {
-            "id": "h2h",
-            "name": "Hearts2Hearts",
-            "description": "Soal Test Pengetahuan tentang Hearts2Hearts",
-            "questions": [
-                {
-                    "id": "h2h-1",
-                    "number": 1,
-                    "answer": "ChoiJiwoo",
-                    "row": 2,
-                    "col": 1,
-                    "direction": "across",
-                    "clue": "Nama lengkap leader Hearts2Hearts"
-                },
-                {
-                    "id": "h2h-2",
-                    "number": 2,
-                    "answer": "KimJueun",
-                    "row": 1,
-                    "col": 4,
-                    "direction": "down",
-                    "clue": "Nama lengkap main dancer Hearts2Hearts"
-                },
-                {
-                    "id": "h2h-3",
-                    "number": 3,
-                    "answer": "TheChase",
-                    "row": 10,
-                    "col": 4,
-                    "direction": "across",
-                    "clue": "Lagu debut Hearts2Hearts"
-                },
-                {
-                    "id": "h2h-4",
-                    "number": 4,
-                    "answer": "Carmen",
-                    "row": 6,
-                    "col": 6,
-                    "direction": "down",
-                    "clue": "Nama member Hearts2Hearts asal indonesia (Stage Name)"
-                },
-                {
-                    "id": "h2h-5",
-                    "number": 5,
-                    "answer": "Yuha",
-                    "row": 7,
-                    "col": 3,
-                    "direction": "across",
-                    "clue": "Member dengan masa trainee terlama di Hearts2Hearts"
-                },
-                {
-                    "id": "h2h-6",
-                    "number": 6,
-                    "answer": "Yeon",
-                    "row": 9,
-                    "col": 11,
-                    "direction": "down",
-                    "clue": "Maknae Hearts2hearts (Stage Name)"
-                }
-            ]
-        },
-        {
             "id": "algoritma",
             "name": "Algoritma",
             "description": "Soal tentang konsep dasar algoritma dan struktur data.",
@@ -471,6 +410,67 @@
                     "col": 10,
                     "direction": "across",
                     "clue": "Kode sekali pakai untuk verifikasi login atau transaksi"
+                }
+            ]
+        },
+        {
+            "id": "h2h",
+            "name": "Hearts2Hearts",
+            "description": "Soal Test Pengetahuan tentang Hearts2Hearts",
+            "questions": [
+                {
+                    "id": "h2h-1",
+                    "number": 1,
+                    "answer": "ChoiJiwoo",
+                    "row": 2,
+                    "col": 1,
+                    "direction": "across",
+                    "clue": "Nama lengkap leader Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-2",
+                    "number": 2,
+                    "answer": "KimJueun",
+                    "row": 1,
+                    "col": 4,
+                    "direction": "down",
+                    "clue": "Nama lengkap main dancer Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-3",
+                    "number": 3,
+                    "answer": "TheChase",
+                    "row": 10,
+                    "col": 4,
+                    "direction": "across",
+                    "clue": "Lagu debut Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-4",
+                    "number": 4,
+                    "answer": "Carmen",
+                    "row": 6,
+                    "col": 6,
+                    "direction": "down",
+                    "clue": "Nama member Hearts2Hearts asal indonesia (Stage Name)"
+                },
+                {
+                    "id": "h2h-5",
+                    "number": 5,
+                    "answer": "Yuha",
+                    "row": 7,
+                    "col": 3,
+                    "direction": "across",
+                    "clue": "Member dengan masa trainee terlama di Hearts2Hearts"
+                },
+                {
+                    "id": "h2h-6",
+                    "number": 6,
+                    "answer": "Yeon",
+                    "row": 9,
+                    "col": 11,
+                    "direction": "down",
+                    "clue": "Maknae Hearts2hearts (Stage Name)"
                 }
             ]
         }
