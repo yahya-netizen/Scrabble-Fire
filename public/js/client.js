@@ -309,6 +309,14 @@ function buildGrid() {
             input.type = 'text'; input.maxLength = 1; input.className = 'cell';
             input.id = `cell-${r}-${c}`; input.dataset.row = r; input.dataset.col = c;
             input.readOnly = true;
+            input.addEventListener('focus', () => {
+                const word = getActiveWordAt(r, c, lastDirection);
+                if (word) {
+                    activeWordId = word.id;
+                    lastDirection = word.direction;
+                }
+            });
+            input.addEventListener('click', () => selectWordAtCell(r, c));
             input.addEventListener('input', (e) => {
                 if (!gameState.gameStarted) {
                     e.target.value = '';
@@ -549,42 +557,77 @@ function showToast(msg, color) {
 //  FOCUS HELPERS
 // ────────────────────────────────────────────────
 let lastDirection = 'across';
+let activeWordId = null;
+function wordContainsCell(word, r, c) {
+    return (word.direction === 'across' && r === word.row && c >= word.col && c < word.col + word.answer.length) ||
+        (word.direction === 'down' && c === word.col && r >= word.row && r < word.row + word.answer.length);
+}
 function getActiveWordAt(r, c, preferDirection) {
-    const candidates = gameState.soal.filter(s => (s.direction === 'across' && r === s.row && c >= s.col && c < s.col + s.answer.length) || (s.direction === 'down' && c === s.col && r >= s.row && r < s.row + s.answer.length));
-    return candidates.find(s => s.direction === preferDirection) || candidates[0];
+    const candidates = gameState.soal.filter(s => wordContainsCell(s, r, c));
+    return candidates.find(s => s.id === activeWordId) || candidates.find(s => s.direction === preferDirection) || candidates[0];
+}
+function selectWordAtCell(r, c) {
+    const candidates = gameState.soal.filter(s => wordContainsCell(s, r, c));
+    if (!candidates.length) return;
+
+    const activeIndex = candidates.findIndex(s => s.id === activeWordId);
+    const startsHere = candidates.filter(s => s.row === r && s.col === c);
+    let word = null;
+
+    if (activeIndex >= 0 && candidates.length > 1) {
+        word = candidates[(activeIndex + 1) % candidates.length];
+    } else {
+        word = startsHere.find(s => s.direction === 'down') ||
+            candidates.find(s => s.direction === 'down') ||
+            candidates[0];
+    }
+
+    activeWordId = word.id;
+    lastDirection = word.direction;
+}
+function getCellPositionInWord(word, r, c) {
+    return word.direction === 'across' ? c - word.col : r - word.row;
+}
+function getWordCell(word, index) {
+    const r = word.direction === 'across' ? word.row : word.row + index;
+    const c = word.direction === 'across' ? word.col + index : word.col;
+    return document.getElementById(`cell-${r}-${c}`);
+}
+function focusOpenCellInWord(word, fromIndex, step, emptyOnly = false) {
+    activeWordId = word.id;
+    lastDirection = word.direction;
+    for (let i = fromIndex + step; i >= 0 && i < word.answer.length; i += step) {
+        const input = getWordCell(word, i);
+        if (input && input.classList.contains('active') && !input.readOnly && (!emptyOnly || !input.value)) {
+            input.focus();
+            return true;
+        }
+    }
+    return false;
 }
 function focusNext(r, c) {
     const word = getActiveWordAt(r, c, lastDirection); if (!word) return;
-    lastDirection = word.direction; let nr = r, nc = c;
-    if (word.direction === 'across') nc++; else nr++;
-    const next = document.getElementById(`cell-${nr}-${nc}`);
-    if (next && next.classList.contains('active') && !next.readOnly) next.focus();
+    focusOpenCellInWord(word, getCellPositionInWord(word, r, c), 1, true);
 }
 function focusPrev(r, c) {
     const word = getActiveWordAt(r, c, lastDirection); if (!word) return;
-    let pr = r, pc = c; if (word.direction === 'across') pc--; else pr--;
-    const prev = document.getElementById(`cell-${pr}-${pc}`);
-    if (prev && prev.classList.contains('active') && !prev.readOnly) prev.focus();
+    focusOpenCellInWord(word, getCellPositionInWord(word, r, c), -1);
 }
 function focusNextInWord(r, c, dir) {
-    const word = gameState.soal.find(s => s.direction === dir && ((dir === 'across' && r === s.row && c >= s.col && c < s.col + s.answer.length) || (dir === 'down' && c === s.col && r >= s.row && r < s.row + s.answer.length)));
-    if (!word) return; lastDirection = dir; let nr = r, nc = c;
-    if (dir === 'across') nc++; else nr++;
-    const next = document.getElementById(`cell-${nr}-${nc}`);
-    if (next && next.classList.contains('active') && !next.readOnly) next.focus();
+    const word = gameState.soal.find(s => s.direction === dir && wordContainsCell(s, r, c));
+    if (!word) return;
+    focusOpenCellInWord(word, getCellPositionInWord(word, r, c), 1);
 }
 function focusPrevInWord(r, c, dir) {
-    const word = gameState.soal.find(s => s.direction === dir && ((dir === 'across' && r === s.row && c > s.col && c <= s.col + s.answer.length) || (dir === 'down' && c === s.col && r > s.row && r <= s.row + s.answer.length)));
-    if (!word) return; lastDirection = dir; let pr = r, pc = c;
-    if (dir === 'across') pc--; else pr--;
-    const prev = document.getElementById(`cell-${pr}-${pc}`);
-    if (prev && prev.classList.contains('active') && !prev.readOnly) prev.focus();
+    const word = gameState.soal.find(s => s.direction === dir && wordContainsCell(s, r, c));
+    if (!word) return;
+    focusOpenCellInWord(word, getCellPositionInWord(word, r, c), -1);
 }
 function focusWord(soal) {
+    activeWordId = soal.id;
     lastDirection = soal.direction;
     for (let i = 0; i < soal.answer.length; i++) {
-        let r = soal.row, c = soal.col; if (soal.direction === 'across') c += i; else r += i;
-        const input = document.getElementById(`cell-${r}-${c}`);
+        const input = getWordCell(soal, i);
         if (input && !input.readOnly && !input.value) { input.focus(); return; }
     }
     const first = document.getElementById(`cell-${soal.row}-${soal.col}`);
