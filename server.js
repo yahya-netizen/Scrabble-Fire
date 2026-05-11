@@ -421,6 +421,16 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
+app.get('/api/categories', async (req, res) => {
+    try {
+        const categories = await getCategories();
+        res.json(categories);
+    } catch (error) {
+        console.error('API /categories Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // --- GOOGLE OAUTH ROUTES ---
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
