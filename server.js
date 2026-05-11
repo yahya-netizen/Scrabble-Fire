@@ -23,7 +23,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'dummy',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
-    callbackURL: "/auth/google/callback"
+    callbackURL: "https://scrabble-fire-production.up.railway.app/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
     try {
         let user = await getUserByGoogleId(profile.id);
