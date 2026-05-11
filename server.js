@@ -15,7 +15,7 @@ const io = new Server(server, {
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-const USERS_FILE = 'users.json';
+const USERS_FILE = process.env.USERS_FILE || 'data/users.json';
 const SOAL_FILE = 'soal.json';
 
 // Middleware
