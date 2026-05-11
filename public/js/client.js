@@ -206,6 +206,7 @@ function initSocket() {
         setTimeout(() => input.classList.remove('typing-other'), 500);
         const playerColor = gameState.scores[username] ? gameState.scores[username].color : '#ffffff';
         gameState.grid[`${row}-${col}`] = { char, locked: false, lastBy: username, lastColor: playerColor };
+        playCellSound();
     });
 
     socket.on('word_completed', (data) => {
@@ -231,6 +232,7 @@ function initSocket() {
         renderClues();
         renderPlayers(scores);
         const isSelf = username === myUsername;
+        playWordSound(true);
         showToast(isSelf ? `🎉 Kamu menjawab kata ${answer}! +${pointsEarned} poin` : `✅ ${username} menjawab "${answer}"!`, isSelf ? color : null);
     });
 
@@ -241,11 +243,14 @@ function initSocket() {
         renderBoard();
         renderClues();
         updateStartControls();
+        playGameStartSound();
         showToast(message || 'Game dimulai!');
     });
     socket.on('timer_update', ({ timeLeft }) => updateTimer(timeLeft));
     socket.on('start_error', ({ message }) => showToast(message));
     socket.on('game_over', ({ reason, rankings, winner, winnerColor, burnedCells }) => {
+        playVictorySound();
+        setTimeout(() => playBurnSound(), 300);
         playWinnerBurnEffect({ winner, winnerColor, burnedCells });
         setTimeout(() => showGameOver(reason, rankings, winner), 2400);
     });
@@ -542,7 +547,9 @@ function showGameOver(reason, rankings, winner) {
     showScreen('gameover-screen');
 }
 
-function backToLobby() { location.reload(); }
+function backToLobby() { 
+    location.reload(); 
+}
 
 function showToast(msg, color) {
     const container = document.getElementById('toast-container');
@@ -624,15 +631,80 @@ function focusPrevInWord(r, c, dir) {
     if (!word) return;
     focusOpenCellInWord(word, getCellPositionInWord(word, r, c), -1);
 }
-function focusWord(soal) {
-    activeWordId = soal.id;
-    lastDirection = soal.direction;
-    for (let i = 0; i < soal.answer.length; i++) {
-        const input = getWordCell(soal, i);
-        if (input && !input.readOnly && !input.value) { input.focus(); return; }
+// ────────────────────────────────────────────────
+//  🔊 SOUND EFFECTS
+// ────────────────────────────────────────────────
+let audioContext;
+
+const audioConfig = {
+    volume: 0.3,
+    sample: 44100,
+};
+
+function initAudioContext() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
-    const first = document.getElementById(`cell-${soal.row}-${soal.col}`);
-    if (first && !first.readOnly) first.focus();
+    return audioContext;
+}
+
+function playTone(frequency, duration, volume = 0.3, envelope = 'default') {
+    const ctx = initAudioContext();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.frequency.value = frequency;
+    osc.type = 'sine';
+    gain.gain.value = 0;
+    
+    if (envelope === 'default') {
+        gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration - 0.05);
+    } else if (envelope === 'punch') {
+        gain.gain.linearRampToValueAtTime(volume, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration - 0.02);
+    }
+    
+    osc.start(now);
+    osc.stop(now + duration);
+}
+
+function playWordSound(isCorrect = true) {
+    if (isCorrect) {
+        const frequencies = [523.25, 659.25, 783.99];
+        frequencies.forEach((freq, i) => {
+            setTimeout(() => playTone(freq, 0.15, 0.25), i * 100);
+        });
+    }
+}
+
+function playBurnSound() {
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+            const freq = 200 + Math.random() * 300;
+            playTone(freq, 0.1, 0.4, 'punch');
+        }, i * 80);
+    }
+}
+
+function playVictorySound() {
+    const frequencies = [523.25, 659.25, 783.99, 987.77, 1174.66];
+    frequencies.forEach((freq, i) => {
+        setTimeout(() => playTone(freq, 0.2, 0.25), i * 150);
+    });
+}
+
+function playCellSound() {
+    playTone(800 + Math.random() * 200, 0.05, 0.15);
+}
+
+function playGameStartSound() {
+    playTone(400, 0.1, 0.3);
+    setTimeout(() => playTone(600, 0.2, 0.3), 100);
 }
 
 // Start
