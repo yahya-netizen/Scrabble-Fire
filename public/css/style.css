@@ -578,6 +578,96 @@ select.field-input {
     color: var(--dim);
 }
 
+@media (max-width: 900px) {
+    body {
+        align-items: stretch;
+    }
+
+    #game-screen {
+        --game-padding-x: 10px;
+        --game-gap: 12px;
+        --board-content-size: min(calc(100vw - 44px), calc(100vh - 220px), 598px);
+        --cell-size: calc((var(--board-content-size) - 28px) / 15);
+        --board-width: calc(var(--board-content-size) + 24px);
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        align-items: center;
+    }
+
+    .topbar {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+    }
+
+    .topbar-logo {
+        width: 100%;
+        text-align: center;
+        font-size: 1.15rem;
+    }
+
+    .topbar-info {
+        justify-content: center;
+        max-width: 100%;
+    }
+
+    .game-layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+    }
+
+    #grid-wrapper {
+        order: 1;
+        justify-self: center;
+        width: var(--board-width);
+        min-width: 0;
+        max-width: 100%;
+        flex: 0 0 auto;
+    }
+
+    .sidebar {
+        order: 2;
+        width: min(100%, var(--board-width));
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        grid-template-rows: auto;
+    }
+
+    .clue-list {
+        max-height: 280px;
+    }
+
+    .panel {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 420px) {
+    .auth-card,
+    .lobby-card,
+    .gameover-card {
+        width: calc(100vw - 24px);
+        padding: 24px;
+    }
+
+    .room-settings {
+        grid-template-columns: 1fr;
+    }
+
+    #game-screen {
+        --game-padding-x: 6px;
+        --board-content-size: calc(100vw - 36px);
+    }
+
+    .cell-number {
+        font-size: 7px;
+    }
+}
+
 /* Toast notification */
 #toast-container {
     position: fixed;
