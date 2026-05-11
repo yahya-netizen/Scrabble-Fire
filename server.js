@@ -7,6 +7,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const pool = require('./db');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const app = express();
 const server = http.createServer(app);
@@ -15,48 +18,92 @@ const io = new Server(server, {
 });
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
-const USERS_FILE = process.env.USERS_FILE || 'data/users.json';
-const SOAL_FILE = 'soal.json';
+
+// Passport Config
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID || 'dummy',
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy',
+    callbackURL: "/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+    try {
+        let user = await getUserByGoogleId(profile.id);
+        if (!user) {
+            // Check if username (email or display name) already exists
+            let username = profile.emails[0].value.split('@')[0];
+            const existingUser = await getUserByUsername(username);
+            if (existingUser) {
+                username = username + '_' + Math.floor(Math.random() * 1000);
+            }
+            await createUser(username, null, profile.id);
+            user = await getUserByGoogleId(profile.id);
+        }
+        return done(null, user);
+    } catch (err) {
+        return done(err);
+    }
+}));
+
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+    try {
+        const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
+        done(null, rows[0]);
+    } catch (err) {
+        done(err);
+    }
+});
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(express.static('public'));
 
-// Helpers for persistence
-const readUsers = () => JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-const writeUsers = (users) => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-const readSoalData = () => JSON.parse(fs.readFileSync(SOAL_FILE, 'utf8'));
-const normalizeSoalData = () => {
-    const data = readSoalData();
-    if (Array.isArray(data)) {
-        return {
-            categories: [
-                {
-                    id: 'default',
-                    name: 'Default',
-                    description: 'Kategori bawaan dari format soal lama.',
-                    questions: data
-                }
-            ]
-        };
+// Helpers for persistence (REFACTORED for MySQL)
+const getUserByUsername = async (username) => {
+    const [rows] = await pool.execute('SELECT * FROM users WHERE username = ?', [username]);
+    return rows[0];
+};
+
+const getUserByGoogleId = async (googleId) => {
+    const [rows] = await pool.execute('SELECT * FROM users WHERE google_id = ?', [googleId]);
+    return rows[0];
+};
+
+const createUser = async (username, password, googleId = null) => {
+    await pool.execute('INSERT INTO users (username, password, google_id) VALUES (?, ?, ?)', [username, password, googleId]);
+};
+
+const getCategories = async () => {
+    const [rows] = await pool.execute('SELECT * FROM categories');
+    // Map to match the previous structure if needed, or update the consumer
+    const categories = [];
+    for (const row of rows) {
+        const [qRows] = await pool.execute('SELECT COUNT(*) as count FROM questions WHERE category_id = ?', [row.id]);
+        categories.push({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            questionCount: qRows[0].count
+        });
     }
-    return data;
+    return categories;
 };
-const getCategories = () => normalizeSoalData().categories.map(category => ({
-    id: category.id,
-    name: category.name || category.id,
-    description: category.description || '',
-    questionCount: Array.isArray(category.questions) ? category.questions.length : 0
-}));
-const getCategoryById = (categoryId) => {
-    const categories = normalizeSoalData().categories;
-    return categories.find(category => category.id === categoryId) || categories[0];
+
+const getCategoryById = async (categoryId) => {
+    const [rows] = await pool.execute('SELECT * FROM categories WHERE id = ?', [categoryId]);
+    return rows[0];
 };
-const getSoalByCategory = (categoryId) => {
-    const category = getCategoryById(categoryId);
-    return category && Array.isArray(category.questions) ? category.questions : [];
+
+const getSoalByCategory = async (categoryId) => {
+    const [rows] = await pool.execute('SELECT id, `number`, answer, row_pos as `row`, col_pos as `col`, direction, clue FROM questions WHERE category_id = ?', [categoryId]);
+    return rows;
+};
+
+const saveGameHistory = async (userId, score) => {
+    await pool.execute('INSERT INTO game_history (user_id, score) VALUES (?, ?)', [userId, score]);
+    await pool.execute('UPDATE users SET total_points = total_points + ? WHERE id = ?', [score, userId]);
 };
 
 // ─────────────────────────────────────────────
@@ -72,22 +119,23 @@ function normalizeDuration(duration) {
     return Math.min(Math.max(Math.round(parsed), 60), 1800);
 }
 
-function createRoom(roomId, settings = {}) {
-    const category = getCategoryById(settings.categoryId) || {
+async function createRoom(roomId, settings = {}) {
+    const category = (await getCategoryById(settings.categoryId)) || {
         id: 'empty',
         name: 'Tanpa Kategori',
         questions: []
     };
     const duration = normalizeDuration(settings.duration);
+    const soal = await getSoalByCategory(category.id);
 
     return {
         id: roomId,
         categoryId: category.id,
         categoryName: category.name,
         duration,
-        soal: getSoalByCategory(category.id),
+        soal,
         starterSocketId: null,
-        players: {},          // socketId → { username, score, color }
+        players: {},          // socketId → { username, score, color, userId }
         gridState: {},        // "r-c" → { char, locked, lockedBy }
         completedWords: {},   // wordId → username
         timer: null,
@@ -144,7 +192,7 @@ function startTimer(roomId) {
     }, 1000);
 }
 
-function endGame(roomId, reason) {
+async function endGame(roomId, reason) {
     const room = rooms.get(roomId);
     if (!room || room.gameOver) return;
 
@@ -155,6 +203,18 @@ function endGame(roomId, reason) {
     const rankings = Object.values(room.players)
         .sort((a, b) => b.score - a.score)
         .map((p, i) => ({ rank: i + 1, username: p.username, score: p.score, color: p.color }));
+
+    // Save history to DB
+    for (const player of Object.values(room.players)) {
+        try {
+            const user = await getUserByUsername(player.username);
+            if (user) {
+                await saveGameHistory(user.id, player.score);
+            }
+        } catch (error) {
+            console.error(`Failed to save history for ${player.username}:`, error);
+        }
+    }
 
     const winner = rankings[0] || null;
     const burnedCells = winner ? Object.entries(room.gridState)
@@ -273,17 +333,17 @@ app.post('/api/register', async (req, res) => {
         const { username, password } = req.body;
         if (!username || !password) return res.status(400).json({ message: 'Username dan password diperlukan' });
 
-        const users = readUsers();
-        if (users.find(u => u.username === username)) {
+        const user = await getUserByUsername(username);
+        if (user) {
             return res.status(400).json({ message: 'Username sudah terdaftar' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        users.push({ username, password: hashedPassword });
-        writeUsers(users);
+        await createUser(username, hashedPassword);
 
         res.status(201).json({ message: 'Registrasi berhasil' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -291,17 +351,17 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        const users = readUsers();
-        const user = users.find(u => u.username === username);
+        const user = await getUserByUsername(username);
 
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ message: 'Username atau password salah' });
         }
 
-        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1d' });
+        const token = jwt.sign({ username, id: user.id }, JWT_SECRET, { expiresIn: '1d' });
         res.cookie('token', token, { httpOnly: true });
         res.json({ message: 'Login berhasil', username });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -311,30 +371,73 @@ app.post('/api/logout', (req, res) => {
     res.json({ message: 'Logout berhasil' });
 });
 
-app.get('/api/me', (req, res) => {
+app.get('/api/me', async (req, res) => {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ message: 'Not authenticated' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        res.json({ username: decoded.username });
+        const user = await getUserByUsername(decoded.username);
+        if (!user) return res.status(401).json({ message: 'User not found' });
+        
+        console.log(`API /me called for: ${user.username}`);
+        res.json({ 
+            username: user.username, 
+            total_points: user.total_points || 0,
+            id: user.id
+        });
     } catch (error) {
+        console.error('API /me Error:', error.message);
         res.status(401).json({ message: 'Invalid token' });
     }
 });
 
-app.get('/api/soal', (req, res) => {
-    const categoryId = req.query.category;
-    res.json(categoryId ? getSoalByCategory(categoryId) : normalizeSoalData());
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        console.log('Fetching leaderboard...');
+        const [rows] = await pool.execute('SELECT username, total_points FROM users ORDER BY total_points DESC LIMIT 10');
+        res.json(rows);
+    } catch (error) {
+        console.error('API /leaderboard Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-app.get('/api/categories', (req, res) => {
-    res.json(getCategories());
+app.get('/api/history', async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ message: 'Not authenticated' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        console.log(`Fetching history for user ID: ${decoded.id}`);
+        const [rows] = await pool.execute(
+            'SELECT score, played_at FROM game_history WHERE user_id = ? ORDER BY played_at DESC LIMIT 20',
+            [decoded.id]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error('API /history Error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
+
+// --- GOOGLE OAUTH ROUTES ---
+app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', { failureRedirect: '/', session: false }),
+    (req, res) => {
+        const token = jwt.sign({ username: req.user.username, id: req.user.id }, JWT_SECRET, { expiresIn: '1d' });
+        res.cookie('token', token, { httpOnly: true });
+        res.redirect('/');
+    }
+);
 
 // --- WEBSOCKET AUTH ---
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
     const cookie = socket.handshake.headers.cookie;
     if (!cookie) return next(new Error('Authentication error'));
 
@@ -343,7 +446,10 @@ io.use((socket, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        socket.user = decoded;
+        const user = await getUserByUsername(decoded.username);
+        if (!user) return next(new Error('Authentication error'));
+        
+        socket.user = { username: user.username, id: user.id };
         next();
     } catch (err) {
         next(new Error('Authentication error'));
@@ -360,7 +466,7 @@ io.on('connection', (socket) => {
         socket.emit('room_list', getRoomList());
     });
 
-    socket.on('join_room', ({ roomId, settings }) => {
+    socket.on('join_room', async ({ roomId, settings }) => {
         if (!roomId) return;
         
         let room = rooms.get(roomId);
@@ -371,7 +477,7 @@ io.on('connection', (socket) => {
         }
 
         if (!room) {
-            room = createRoom(roomId, settings);
+            room = await createRoom(roomId, settings);
             if (!room.soal.length) {
                 socket.emit('join_error', { message: 'Kategori soal ini belum punya soal.' });
                 return;
@@ -390,7 +496,7 @@ io.on('connection', (socket) => {
         }
 
         const color = assignColor(room);
-        room.players[socket.id] = { username, score: 0, color, socketId: socket.id };
+        room.players[socket.id] = { username, score: 0, color, socketId: socket.id, userId: socket.user.id };
         if (!room.starterSocketId || !room.players[room.starterSocketId]) {
             room.starterSocketId = socket.id;
         }

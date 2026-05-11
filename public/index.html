@@ -6,7 +6,24 @@
     <title>🔥 Scrabble Fire</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Extra styles for Auth Overlay from previous version */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+        :root {
+            --primary: #ff4500;
+            --secondary: #ffcc00;
+            --bg: #0f0808;
+            --card-bg: #1a0d0d;
+            --text: #ffffff;
+            --dim: #a0a0a0;
+            --border: #331a1a;
+            --accent: #8b0000;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * { box-sizing: border-box; font-family: var(--font-main); }
+        body { background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+
+        /* Extra styles for Auth Overlay */
         .overlay {
             position: fixed;
             top: 0;
@@ -20,29 +37,29 @@
             z-index: 2000;
         }
         .auth-card {
-            background: #1a0d0d;
+            background: var(--card-bg);
             padding: 40px;
             border-radius: 16px;
-            border: 2px solid #8b0000;
+            border: 2px solid var(--accent);
             box-shadow: 0 0 40px rgba(255,69,0,0.4);
             text-align: center;
             width: 380px;
         }
-        .auth-card h2 { color: #ffcc00; margin-bottom: 20px; }
+        .auth-card h2 { color: var(--secondary); margin-bottom: 20px; font-weight: 800; }
         .auth-card input {
             width: 100%;
             background: #0f0808;
-            border: 1px solid #8b0000;
+            border: 1px solid var(--accent);
             border-radius: 8px;
             color: #fff;
             padding: 12px;
             margin-bottom: 15px;
             outline: none;
         }
-        .auth-card input:focus { border-color: #ff4500; }
+        .auth-card input:focus { border-color: var(--primary); }
         .auth-card button {
             width: 100%;
-            background: #ff4500;
+            background: var(--primary);
             color: #fff;
             border: none;
             border-radius: 8px;
@@ -52,8 +69,57 @@
             text-transform: uppercase;
         }
         .auth-card button:hover { background: #e03d00; }
-        .auth-card p { font-size: 0.85rem; margin-top: 20px; color: #555; }
-        .auth-card a { color: #ffcc00; text-decoration: none; font-weight: 700; }
+        .google-btn {
+            background: #fff !important;
+            color: #757575 !important;
+            border: 1px solid #ddd !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .google-btn:hover { background: #f1f1f1 !important; }
+        .auth-card p { font-size: 0.85rem; margin-top: 20px; color: var(--dim); }
+        .auth-card a { color: var(--secondary); text-decoration: none; font-weight: 700; }
+
+        /* Profile & Leaderboard Styles */
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--dim);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .tab-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        
+        .profile-container, .leaderboard-container { display: none; margin-top: 20px; width: 100%; }
+        .profile-container.active, .leaderboard-container.active { display: block; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: var(--secondary); display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; }
+
+        .history-list, .leaderboard-list { list-style: none; padding: 0; margin: 0; }
+        .history-item, .leader-item {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+        }
+        .leader-item.top-rank { border-color: var(--secondary); background: rgba(255, 204, 0, 0.05); }
+        .rank-badge { background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 800; margin-right: 10px; }
+        .rank-1 { background: gold; color: #000; }
+        .rank-2 { background: silver; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
     </style>
 </head>
 <body>
@@ -61,13 +127,17 @@
 <!-- ═══════════ AUTH ═══════════ -->
 <div id="auth-overlay" class="overlay">
     <div class="auth-card">
-        <div class="logo" style="font-size: 2.2rem; font-weight: 900; color: #ff4500; text-shadow: 0 0 20px #8b0000; margin-bottom: 10px;">🔥 SCRABBLE FIRE</div>
+        <div class="logo" style="font-size: 2.2rem; font-weight: 900; color: var(--primary); text-shadow: 0 0 20px var(--accent); margin-bottom: 10px;">🔥 SCRABBLE FIRE</div>
         
         <div id="login-form">
             <h2>Masuk</h2>
             <input type="text" id="login-username" placeholder="Username">
             <input type="password" id="login-password" placeholder="Password">
             <button id="btn-login">Login</button>
+            <button class="google-btn" onclick="window.location.href='/auth/google'">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+                Masuk dengan Google
+            </button>
             <p>Belum punya akun? <a href="#" id="show-register">Daftar sekarang</a></p>
         </div>
 
@@ -76,10 +146,14 @@
             <input type="text" id="reg-username" placeholder="Username">
             <input type="password" id="reg-password" placeholder="Password">
             <button id="btn-register">Daftar</button>
+            <button class="google-btn" onclick="window.location.href='/auth/google'">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+                Daftar dengan Google
+            </button>
             <p>Sudah punya akun? <a href="#" id="show-login">Login di sini</a></p>
         </div>
         
-        <p id="auth-message" style="color: #ffcc00; margin-top: 15px; min-height: 20px;"></p>
+        <p id="auth-message" style="color: var(--secondary); margin-top: 15px; min-height: 20px;"></p>
     </div>
 </div>
 
@@ -89,40 +163,48 @@
         <div class="logo">🔥 SCRABBLE FIRE</div>
         <div class="tagline">Teka-teki silang multiplayer real-time</div>
         
-        <div style="text-align: right; margin-bottom: 20px;">
-            <span id="lobby-user-display" style="color: #ffcc00; font-weight: 700; margin-right: 10px;"></span>
-            <button onclick="logout()" style="background: transparent; border: 1px solid #333; color: #555; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 0.75rem;">Logout</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--bg); padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div id="lobby-avatar" style="width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem; border: 2px solid var(--accent);"></div>
+                <div>
+                    <span id="lobby-user-display" style="color: var(--secondary); font-weight: 800; display: block; font-size: 1.1rem;"></span>
+                    <a href="/profile.html" style="color: var(--dim); font-size: 0.75rem; text-decoration: none; font-weight: 600;">Lihat Profil & Leaderboard ⮕</a>
+                </div>
+            </div>
+            <button onclick="logout()" style="background: var(--accent); border: none; color: #fff; padding: 8px 14px; cursor: pointer; border-radius: 8px; font-size: 0.8rem; font-weight: 800;">LOGOUT</button>
         </div>
 
-        <label class="field-label">ID Room</label>
-        <input id="inp-room" class="field-input" placeholder="Ketik ID room baru atau pilih di bawah..." maxlength="20" autocomplete="off">
+        <div id="play-container" class="tab-content active">
+            <label class="field-label">ID Room</label>
+            <input id="inp-room" class="field-input" placeholder="ID room baru atau pilih di bawah..." maxlength="20" autocomplete="off">
 
-        <div class="room-settings">
-            <div>
-                <label class="field-label">Kategori Soal</label>
-                <select id="inp-category" class="field-input">
-                    <option value="">Memuat kategori...</option>
-                </select>
+            <div class="room-settings">
+                <div>
+                    <label class="field-label">Kategori Soal</label>
+                    <select id="inp-category" class="field-input">
+                        <option value="">Memuat kategori...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="field-label">Durasi</label>
+                    <select id="inp-duration" class="field-input">
+                        <option value="120">2 menit</option>
+                        <option value="180" selected>3 menit</option>
+                        <option value="300">5 menit</option>
+                        <option value="600">10 menit</option>
+                    </select>
+                </div>
             </div>
-            <div>
-                <label class="field-label">Durasi</label>
-                <select id="inp-duration" class="field-input">
-                    <option value="120">2 menit</option>
-                    <option value="180" selected>3 menit</option>
-                    <option value="300">5 menit</option>
-                    <option value="600">10 menit</option>
-                </select>
+
+            <button class="btn" onclick="joinRoom()">🚀 Masuk / Buat Room</button>
+            <div id="lobby-error" class="error-msg"></div>
+
+            <div class="divider">atau pilih room aktif</div>
+
+            <div id="room-list-container">
+                <h3>Room Tersedia</h3>
+                <div id="room-list"><div id="no-rooms">Memuat daftar room...</div></div>
             </div>
-        </div>
-
-        <button class="btn" onclick="joinRoom()">🚀 Masuk / Buat Room</button>
-        <div id="lobby-error" class="error-msg"></div>
-
-        <div class="divider">atau pilih room aktif</div>
-
-        <div id="room-list-container">
-            <h3>Room Tersedia</h3>
-            <div id="room-list"><div id="no-rooms">Memuat daftar room...</div></div>
         </div>
     </div>
 </div>

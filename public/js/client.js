@@ -59,6 +59,7 @@ function showAuth() {
 async function startAs(username) {
     myUsername = username;
     document.getElementById('lobby-user-display').innerText = username;
+    document.getElementById('lobby-avatar').innerText = username.charAt(0).toUpperCase();
     authOverlay.style.display = 'none';
     lobbyScreen.style.display = 'flex';
     await loadCategories();

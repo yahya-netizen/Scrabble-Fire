@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil & Leaderboard | 🔥 Scrabble Fire</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+        :root {
+            --primary: #ff4500;
+            --secondary: #ffcc00;
+            --bg: #0f0808;
+            --card-bg: #1a0d0d;
+            --text: #ffffff;
+            --dim: #a0a0a0;
+            --border: #331a1a;
+            --accent: #8b0000;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        * { box-sizing: border-box; font-family: var(--font-main); }
+        body { background: var(--bg); color: var(--text); margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            width: 90%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .header {
+            padding: 20px 5%;
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--accent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { font-weight: 900; color: var(--primary); font-size: 1.5rem; text-shadow: 0 0 10px var(--accent); cursor: pointer; }
+
+        .profile-card, .leaderboard-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h2 { color: var(--secondary); margin-top: 0; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .stat-box { background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); text-align: center; }
+        .stat-val { font-size: 2rem; font-weight: 800; color: var(--primary); display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+
+        .history-list, .leader-list { list-style: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto; }
+        .history-list::-webkit-scrollbar, .leader-list::-webkit-scrollbar { width: 6px; }
+        .history-list::-webkit-scrollbar-thumb, .leader-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .item {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+        .item:hover { transform: translateX(5px); border-color: var(--accent); }
+
+        .leader-item.top-rank { border-color: var(--secondary); background: rgba(255, 204, 0, 0.05); }
+        .rank-badge { background: var(--accent); color: #fff; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.9rem; }
+        .rank-1 { background: gold; color: #000; box-shadow: 0 0 15px gold; }
+        .rank-2 { background: silver; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
+
+        .btn-back {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-back:hover { background: #e03d00; transform: scale(1.05); }
+
+        .user-info { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .avatar { width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; border: 3px solid var(--accent); }
+        .username-big { font-size: 1.5rem; font-weight: 800; color: var(--text); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo" onclick="location.href='/'">🔥 SCRABBLE FIRE</div>
+    <a href="/" class="btn-back">⬅️ KEMBALI BERMAIN</a>
+</div>
+
+<div class="container">
+    <!-- PROFIL -->
+    <div class="profile-card">
+        <h2>👤 Profil Saya</h2>
+        <div class="user-info">
+            <div id="prof-avatar" class="avatar">?</div>
+            <div>
+                <div id="prof-username" class="username-big">Memuat...</div>
+                <div style="color:var(--dim); font-size: 0.9rem;">Pemain Scrabble Fire</div>
+            </div>
+        </div>
+
+        <div class="stat-grid">
+            <div class="stat-box">
+                <span id="prof-points" class="stat-val">0</span>
+                <span class="stat-label">Total Poin</span>
+            </div>
+            <div class="stat-box">
+                <span id="prof-games" class="stat-val">0</span>
+                <span class="stat-label">Main</span>
+            </div>
+        </div>
+
+        <h3>🕒 Riwayat Game</h3>
+        <ul id="prof-history" class="history-list">
+            <li class="item">Memuat riwayat...</li>
+        </ul>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div class="leaderboard-card">
+        <h2>🏆 Papan Peringkat</h2>
+        <p style="color:var(--dim); font-size: 0.85rem; margin-bottom: 20px;">Daftar pemain dengan skor tertinggi secara global.</p>
+        
+        <ul id="prof-leaderboard" class="leader-list">
+            <li class="item">Memuat leaderboard...</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    async function loadData() {
+        try {
+            console.log('Loading profile data...');
+            // Fetch Profile
+            const meRes = await fetch('/api/me');
+            if (!meRes.ok) { 
+                console.error('Failed to fetch /api/me:', meRes.status);
+                location.href = '/'; 
+                return; 
+            }
+            const me = await meRes.json();
+            console.log('User data loaded:', me);
+            
+            document.getElementById('prof-username').textContent = me.username;
+            document.getElementById('prof-avatar').textContent = me.username.charAt(0).toUpperCase();
+            document.getElementById('prof-points').textContent = me.total_points || 0;
+
+            // Fetch History
+            console.log('Fetching history...');
+            const hRes = await fetch('/api/history');
+            if (!hRes.ok) console.error('Failed to fetch history:', hRes.status);
+            const history = await hRes.json();
+            console.log('History data:', history);
+            document.getElementById('prof-games').textContent = history.length;
+            
+            const hList = document.getElementById('prof-history');
+            if (!history || !history.length) {
+                hList.innerHTML = '<li class="item">Belum ada riwayat game.</li>';
+            } else {
+                hList.innerHTML = history.map(h => `
+                    <li class="item">
+                        <span>${new Date(h.played_at).toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'})}</span>
+                        <span style="color:var(--secondary); font-weight:800;">+${h.score} pts</span>
+                    </li>
+                `).join('');
+            }
+
+            // Fetch Leaderboard
+            console.log('Fetching leaderboard...');
+            const lRes = await fetch('/api/leaderboard');
+            if (!lRes.ok) console.error('Failed to fetch leaderboard:', lRes.status);
+            const leaders = await lRes.json();
+            console.log('Leaderboard data:', leaders);
+            const lList = document.getElementById('prof-leaderboard');
+            lList.innerHTML = leaders.map((u, i) => `
+                <li class="item ${i < 3 ? 'top-rank' : ''}">
+                    <div style="display:flex; align-items:center;">
+                        <span class="rank-badge rank-${i+1}">${i+1}</span>
+                        <span style="font-weight:700;">${u.username}</span>
+                    </div>
+                    <span style="color:var(--secondary); font-weight:800;">${u.total_points || 0} pts</span>
+                </li>
+            `).join('');
+
+        } catch (e) {
+            console.error('Data loading error:', e);
+        }
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>
